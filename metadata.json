@@ -1,0 +1,9 @@
+{
+  "name": "Medi-Mirror",
+  "description": "A smart, privacy-focused personal health assistant powered by Gemini AI.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
