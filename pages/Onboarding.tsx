@@ -1,90 +1,67 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Phone, ArrowRight, HeartPulse, ShieldCheck } from 'lucide-react';
+import { User, ShieldCheck, ArrowRight } from 'lucide-react';
 import { UserProfile } from '../types';
+
+// Functional SVG reconstruction of the provided logo
+const AppLogo: React.FC<{ size?: number; className?: string }> = ({ size = 120, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    {/* Colorful blobs backdrop */}
+    <circle cx="100" cy="100" r="80" fill="#FBBF24" fillOpacity="0.2" />
+    <circle cx="130" cy="80" r="60" fill="#F87171" fillOpacity="0.2" />
+    <circle cx="70" cy="120" r="65" fill="#2DD4BF" fillOpacity="0.2" />
+    <circle cx="120" cy="140" r="55" fill="#FB923C" fillOpacity="0.2" />
+    
+    {/* Main Blue Circle Container */}
+    <circle cx="100" cy="100" r="70" fill="#245A8A" />
+    
+    {/* Hands area cutout (simplified representation) */}
+    <path d="M50 100C50 72.3858 72.3858 50 100 50C127.614 50 150 72.3858 150 100C150 127.614 127.614 150 100 150C72.3858 150 50 127.614 50 100Z" fill="#F7C497" />
+    
+    {/* Handshake Details (stylized silhouettes) */}
+    <path d="M100 70C110 70 140 90 145 120" stroke="#245A8A" strokeWidth="12" strokeLinecap="round" />
+    <path d="M70 120C80 145 120 145 130 130" stroke="#245A8A" strokeWidth="10" strokeLinecap="round" />
+    <path d="M65 110C75 105 95 105 105 125" stroke="#245A8A" strokeWidth="8" strokeLinecap="round" />
+    
+    {/* Crown over the handshake */}
+    <path d="M90 95L93 103L100 97L107 103L110 95L110 108H90V95Z" fill="black" stroke="black" strokeWidth="1" />
+  </svg>
+);
 
 export const Splash: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/auth');
-    }, 2500);
+      navigate('/profile-setup');
+    }, 3000);
     return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-teal-400 text-white">
-      <div className="animate-pulse mb-6">
-        <HeartPulse size={80} />
-      </div>
-      <h1 className="text-4xl font-bold tracking-tight mb-2">Medi-Mirror</h1>
-      <p className="text-blue-50 font-medium text-lg opacity-90">Your health, smarter.</p>
-    </div>
-  );
-};
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white overflow-hidden relative">
+      {/* Background blobs for depth */}
+      <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-yellow-200/30 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-red-200/30 rounded-full blur-3xl animate-pulse delay-75"></div>
 
-export const Auth: React.FC = () => {
-  const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simulate auth success
-    if (isLogin) {
-      navigate('/home');
-    } else {
-      navigate('/profile-setup');
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col justify-center px-6 bg-slate-50">
-      <div className="mb-10 text-center">
-        <h2 className="text-3xl font-bold text-slate-800 mb-2">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
-        </h2>
-        <p className="text-slate-500">
-          {isLogin ? 'Sign in to access your health data' : 'Start your journey to better health'}
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-4">
-          {!isLogin && (
-             <div className="relative">
-             <User className="absolute left-3 top-3.5 text-slate-400" size={20} />
-             <input type="text" placeholder="Full Name" className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" required />
-           </div>
-          )}
-          <div className="relative">
-            <Mail className="absolute left-3 top-3.5 text-slate-400" size={20} />
-            <input type="email" placeholder="Email Address" className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" required />
-          </div>
-          {!isLogin && (
-            <div className="relative">
-              <Phone className="absolute left-3 top-3.5 text-slate-400" size={20} />
-              <input type="tel" placeholder="Phone Number" className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" required />
-            </div>
-          )}
-          <div className="relative">
-            <Lock className="absolute left-3 top-3.5 text-slate-400" size={20} />
-            <input type="password" placeholder="Password" className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" required />
-          </div>
+      <div className="relative animate-bounce-slow flex flex-col items-center">
+        <div className="logo-shadow p-8 bg-white/50 backdrop-blur-md rounded-[60px] border border-white/20">
+          <AppLogo size={160} />
         </div>
+      </div>
+      
+      <div className="mt-12 text-center space-y-2 animate-fade-in">
+        <h1 className="text-4xl font-black text-slate-800 tracking-tighter">Medi-Mirror</h1>
+        <p className="text-slate-400 font-bold text-sm tracking-[0.3em] uppercase opacity-70">Smarter Care • Safer You</p>
+      </div>
 
-        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 mt-6">
-          {isLogin ? 'Sign In' : 'Sign Up'} <ArrowRight size={20} />
-        </button>
-      </form>
-
-      <div className="mt-8 text-center">
-        <p className="text-slate-500">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button onClick={() => setIsLogin(!isLogin)} className="text-blue-600 font-semibold hover:underline">
-            {isLogin ? 'Sign Up' : 'Login'}
-          </button>
-        </p>
+      <div className="absolute bottom-12 flex flex-col items-center gap-4">
+        <div className="flex gap-2">
+           <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+           <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce delay-100"></div>
+           <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce delay-200"></div>
+        </div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Version 2.0.1</p>
       </div>
     </div>
   );
@@ -94,9 +71,18 @@ export const ProfileSetup: React.FC<{ onSave: (p: UserProfile) => void }> = ({ o
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Partial<UserProfile>>({
-    name: 'Rahul',
-    email: 'rahul@example.com',
-    bloodGroup: 'O+'
+    name: '',
+    email: 'user@medimirror.local',
+    phone: '',
+    age: 0,
+    dob: '',
+    height: '',
+    weight: '',
+    bloodGroup: 'O+',
+    allergies: '',
+    conditions: '',
+    deviceConnected: false,
+    emergencyContact: { name: '', phone: '', relation: '' }
   });
 
   const handleNext = () => {
@@ -108,64 +94,105 @@ export const ProfileSetup: React.FC<{ onSave: (p: UserProfile) => void }> = ({ o
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name.startsWith('emergency')) {
+      const field = name.replace('emergency', '').toLowerCase();
+      setFormData({
+        ...formData,
+        emergencyContact: { ...formData.emergencyContact!, [field]: value }
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 flex flex-col">
-      <div className="w-full bg-slate-200 h-2 rounded-full mb-8 mt-4">
-        <div className="bg-blue-600 h-2 rounded-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }}></div>
+    <div className="min-h-screen bg-white p-8 flex flex-col">
+      <div className="flex justify-between items-center mb-8">
+        <AppLogo size={40} />
+        <div className="flex gap-1.5">
+          {[1, 2, 3].map(s => (
+            <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${step === s ? 'w-8 bg-slate-900' : 'w-2 bg-slate-200'}`}></div>
+          ))}
+        </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-slate-800 mb-6">
-        {step === 1 ? 'Basic Info' : step === 2 ? 'Health Stats' : 'Emergency Contact'}
-      </h2>
+      <div className="flex-1 space-y-6">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+            {step === 1 ? 'Hello! Who are you?' : step === 2 ? 'Your Health Vitals' : 'Emergency Point'}
+          </h2>
+          <p className="text-slate-500 text-sm font-medium">Step {step} of 3</p>
+        </div>
 
-      <div className="flex-1 space-y-5">
-        {step === 1 && (
-          <>
-            <div className="flex justify-center mb-6">
-               <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 border-4 border-white shadow-md">
-                 <User size={40} />
+        <div className="space-y-5">
+          {step === 1 && (
+            <div className="animate-fade-in space-y-5">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Full Name</label>
+                <input name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-medium" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Birth Date</label>
+                  <input name="dob" type="date" value={formData.dob} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none transition-all text-slate-500" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Age</label>
+                  <input name="age" type="number" placeholder="25" value={formData.age || ''} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none transition-all" />
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {step === 2 && (
+            <div className="animate-fade-in space-y-5">
+               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Height (cm)</label>
+                  <input name="height" placeholder="175" value={formData.height} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Weight (kg)</label>
+                  <input name="weight" placeholder="70" value={formData.weight} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none" />
+                </div>
+               </div>
+               <div>
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Blood Group</label>
+                 <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none">
+                   {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(g => <option key={g} value={g}>{g}</option>)}
+                 </select>
+               </div>
+               <div>
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Allergies</label>
+                 <input name="allergies" placeholder="e.g., Peanuts, Penicillin" value={formData.allergies} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none" />
                </div>
             </div>
-            <input name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" className="w-full p-4 rounded-xl border border-slate-200" />
-            <input name="dob" type="date" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200 text-slate-500" />
-            <input name="age" type="number" placeholder="Age" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200" />
-          </>
-        )}
-        
-        {step === 2 && (
-          <>
-             <div className="grid grid-cols-2 gap-4">
-              <input name="height" placeholder="Height (cm)" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200" />
-              <input name="weight" placeholder="Weight (kg)" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200" />
-             </div>
-             <select name="bloodGroup" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200 bg-white">
-               <option>Select Blood Group</option>
-               {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(g => <option key={g} value={g}>{g}</option>)}
-             </select>
-             <input name="allergies" placeholder="Allergies (Optional)" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200" />
-          </>
-        )}
+          )}
 
-        {step === 3 && (
-          <>
-            <div className="bg-red-50 p-4 rounded-xl border border-red-100 mb-4">
-              <div className="flex items-center gap-2 text-red-600 font-semibold mb-2">
-                <ShieldCheck size={20} /> Important
+          {step === 3 && (
+            <div className="animate-fade-in space-y-5">
+              <div className="p-5 bg-teal-50 rounded-3xl border border-teal-100 flex items-start gap-3">
+                <ShieldCheck className="text-teal-600 shrink-0 mt-1" size={20} />
+                <p className="text-xs text-teal-800 font-medium leading-relaxed">
+                  Your safety is our priority. This contact will only be used in verified emergency situations.
+                </p>
               </div>
-              <p className="text-red-500 text-sm">This contact will be alerted in case of an emergency.</p>
+               <div>
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Contact Name</label>
+                 <input name="emergencyName" placeholder="Jane Doe" value={formData.emergencyContact?.name} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none" />
+               </div>
+               <div>
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Relationship</label>
+                 <input name="emergencyRelation" placeholder="e.g., Spouse, Parent" value={formData.emergencyContact?.relation} onChange={handleChange} className="w-full px-5 py-4 rounded-[20px] bg-slate-50 border border-slate-100 outline-none" />
+               </div>
             </div>
-             <input name="emergencyName" placeholder="Contact Name" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200" />
-             <input name="emergencyPhone" placeholder="Contact Phone" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200" />
-             <input name="emergencyRelation" placeholder="Relationship (e.g. Spouse)" onChange={handleChange} className="w-full p-4 rounded-xl border border-slate-200" />
-          </>
-        )}
+          )}
+        </div>
       </div>
 
-      <button onClick={handleNext} className="w-full bg-slate-900 text-white font-semibold py-4 rounded-xl mt-6 shadow-lg">
-        {step === 3 ? 'Save Profile' : 'Next Step'}
+      <button onClick={handleNext} className="w-full bg-slate-900 text-white font-bold py-5 rounded-[24px] shadow-2xl shadow-blue-900/10 flex items-center justify-center gap-3 active:scale-[0.98] transition-all group">
+        {step === 3 ? 'Finish Setup' : 'Next Step'} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
       </button>
     </div>
   );

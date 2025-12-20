@@ -1,3 +1,4 @@
+
 export interface UserProfile {
   name: string;
   email: string;
@@ -9,6 +10,8 @@ export interface UserProfile {
   bloodGroup: string;
   allergies: string;
   conditions: string;
+  deviceConnected: boolean;
+  deviceName?: string;
   emergencyContact: {
     name: string;
     phone: string;
@@ -27,7 +30,8 @@ export enum AppRoute {
   RECORDS = 'records',
   EMERGENCY = 'emergency',
   SETTINGS = 'settings',
-  CHAT = 'chat'
+  CHAT = 'chat',
+  MAP = 'map'
 }
 
 export interface Doctor {
@@ -41,13 +45,32 @@ export interface Doctor {
   rating: number;
 }
 
+export interface Visit {
+  id: string;
+  doctorName: string;
+  specialty: string;
+  date: string;
+  hospital: string;
+  doctorImage: string;
+  type: 'Video' | 'In-Person';
+  reportId?: string;
+}
+
 export interface SymptomAnalysis {
   conditions: Array<{ name: string; probability: string; severity: 'low' | 'medium' | 'high' }>;
+  explanation: string;
+  treatment: string;
+  suggestedMedicines: string[];
+  specialistType: string;
   recommendation: string;
   seeDoctor: boolean;
 }
 
 export interface WoundAnalysis {
+  conditionName: string;
+  description: string;
+  severity: string;
+  specialistType: string;
   rednessLevel: string;
   infectionProbability: string;
   healingStage: string;
@@ -60,4 +83,16 @@ export interface ChatMessage {
   role: 'user' | 'ai';
   text: string;
   timestamp: Date;
+}
+
+export interface Place {
+  name: string;
+  uri: string;
+  address?: string;
+  reason?: string; 
+  distance?: number;
+  coords?: {
+    lat: number;
+    lng: number;
+  };
 }

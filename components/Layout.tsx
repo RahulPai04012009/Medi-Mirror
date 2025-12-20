@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Stethoscope, FileText, Settings } from 'lucide-react';
+import { Home, Search, Map as MapIcon, Users, Settings } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,14 +12,14 @@ const BottomNav: React.FC = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/home' },
-    { icon: Search, label: 'Check', path: '/check' }, // Shared route for Symptom/Wound selection
-    { icon: Stethoscope, label: 'Doctors', path: '/doctors' },
-    { icon: FileText, label: 'Records', path: '/records' },
+    { icon: Search, label: 'Check', path: '/check' },
+    { icon: MapIcon, label: 'Map', path: '/map' },
+    { icon: Users, label: 'Doctors', path: '/doctors' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg pb-safe-area">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg pb-safe-area z-50">
       <div className="flex justify-around items-center h-16 max-w-md mx-auto">
         {navItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);

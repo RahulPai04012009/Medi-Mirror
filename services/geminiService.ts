@@ -1,4 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
+import { Place } from "../types";
 
 // Initialize the client
 const getAiClient = () => {
@@ -11,93 +13,178 @@ const getAiClient = () => {
 };
 
 /**
- * Analyzes text symptoms and returns a structured assessment.
+ * Enhanced search for nearby places with reasoning for doctors/medicines.
  */
-export const analyzeSymptoms = async (symptoms: string) => {
+export const mapSearchWithContext = async (
+  query: string, 
+  type: 'hospital' | 'pharmacy', 
+  location: { lat: number; lng: number },
+  appDoctors?: any[]
+) => {
   const ai = getAiClient();
   
-  const prompt = `
-    The patient describes the following symptoms: "${symptoms}".
-    Analyze these symptoms and provide a JSON response with:
-    1. A list of 1-3 likely conditions with severity (low, medium, high).
-    2. A brief recommendation.
-    3. A boolean indicating if they should see a doctor immediately.
+  // Provide app context to the model so it can resolve "Dr. Wilson" to "City Heart Center"
+  const doctorContext = appDoctors 
+    ? `Available Doctors in App: ${JSON.stringify(appDoctors.map(d => ({ name: d.name, hospital: d.hospital })))}` 
+    : "";
+
+  const systemInstruction = `
+    You are an intelligent medical location assistant powered by Google Maps.
+    
+    CONTEXT:
+    - User Location: ${location.lat}, ${location.lng}
+    - App Doctors: ${doctorContext}
+    - Search Type: ${type}
+    
+    YOUR GOAL is to interpret the user's intent and find the most medically appropriate physical locations using the googleMaps tool.
+
+    LOGIC RULES:
+    1. IF TYPE IS 'HOSPITAL':
+       - **Symptom Analysis**: If the user inputs a SYMPTOM (e.g., "chest pain", "blurry vision", "broken arm"), DO NOT search for the symptom string. INFER the required medical SPECIALTY (e.g., "Cardiology", "Ophthalmology", "Orthopedics").
+       - **Search Action**: Use the googleMaps tool to search for that SPECIFIC SPECIALTY or Department nearby (e.g., "Cardiology Hospital", "Eye Clinic", "Urgent Care").
+       - **Doctor Lookup**: If the user searches for a doctor's name from the provided App Doctors list, find their specific workplace/hospital.
+    
+    2. IF TYPE IS 'PHARMACY':
+       - **Medication Analysis**: If the user searches for a specific MEDICATION, identify if it requires a specific type of pharmacy (e.g., Compounding, 24-hour, or major chain).
+       - **Search Action**: Search for pharmacies likely to stock this item. For common meds, prioritize nearest. For specific meds, prioritize larger chains or medical center pharmacies over convenience stores.
+    
+    3. RESPONSE:
+       - Use the googleMaps tool to return the locations.
   `;
 
+  const finalQuery = query.trim() === "" 
+    ? (type === 'hospital' ? "Find top hospitals nearby" : "Find nearby pharmacies")
+    : query;
+
   try {
+    // Maps grounding is only supported in Gemini 2.5 series models.
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
+      contents: `Search Type: ${type}. User Query: "${finalQuery}"`,
+      config: {
+        systemInstruction,
+        tools: [{ googleMaps: {} }],
+        toolConfig: {
+          retrievalConfig: {
+            latLng: {
+              latitude: location.lat,
+              longitude: location.lng
+            }
+          }
+        }
+      }
+    });
+
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const textOutput = response.text || "";
+
+    const places = chunks
+      .map((chunk: any) => {
+        const mapData = chunk.maps;
+        if (mapData && mapData.title && mapData.uri) {
+          // Attempt to extract lat/lng from the URI if possible
+          const coordsMatch = mapData.uri.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+          const coords = coordsMatch ? {
+            lat: parseFloat(coordsMatch[1]),
+            lng: parseFloat(coordsMatch[2])
+          } : undefined;
+
+          let reason = "";
+          
+          if (type === 'hospital') {
+            if (query.toLowerCase().includes("dr.")) {
+               reason = "Doctor's Workplace";
+            } else if (query.trim() !== "") {
+               // Dynamic reason based on symptom inference (simplified for UI)
+               reason = "Specialized Care";
+            } else {
+               reason = "General Hospital";
+            }
+          } else if (type === 'pharmacy') {
+             if (query.trim() !== "") {
+                reason = `Likely stocks ${query}`;
+             } else {
+                reason = "Pharmacy";
+             }
+          }
+
+          return { 
+            name: mapData.title, 
+            uri: mapData.uri, 
+            address: mapData.placeId || "Nearby",
+            reason: reason,
+            coords: coords
+          } as Place;
+        }
+        return null;
+      })
+      .filter((p: any) => p !== null) as Place[];
+
+    // Dedup
+    const uniquePlaces = Array.from(new Map(places.map((p: any) => [p.uri, p])).values());
+
+    return {
+      text: textOutput,
+      places: uniquePlaces
+    };
+  } catch (error) {
+    console.error("Advanced map search failed:", error);
+    throw error;
+  }
+};
+
+// Existing analysis functions remain...
+export const analyzeSymptoms = async (symptoms: string) => {
+  const ai = getAiClient();
+  const prompt = `Analyze: "${symptoms}". Provide a JSON response with:
+  1. A list of potential conditions.
+  2. A brief, simple explanation of what the primary condition is.
+  3. A treatment/care plan (home remedies).
+  4. A list of 2-3 generic over-the-counter medicines (strictly OTC, add disclaimer).
+  5. The type of specialist doctor to see (e.g., 'Cardiologist', 'Dermatologist', 'General Physician').`;
+  
+  try {
+    // Using gemini-3-flash-preview for basic text tasks with structured JSON output.
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            conditions: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  probability: { type: Type.STRING },
-                  severity: { type: Type.STRING, enum: ["low", "medium", "high"] }
-                }
-              }
-            },
+            conditions: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, probability: { type: Type.STRING }, severity: { type: Type.STRING } } } },
+            explanation: { type: Type.STRING, description: "A simple 2-sentence explanation of the main condition." },
+            treatment: { type: Type.STRING, description: "Brief home care advice or cure steps." },
+            suggestedMedicines: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of generic OTC medicines." },
+            specialistType: { type: Type.STRING, description: "The type of doctor to visit." },
             recommendation: { type: Type.STRING },
             seeDoctor: { type: Type.BOOLEAN }
           }
         }
       }
     });
-
-    const text = response.text;
-    if (!text) return null;
-    return JSON.parse(text);
-  } catch (error) {
-    console.error("Symptom analysis failed:", error);
-    throw error;
-  }
+    return JSON.parse(response.text || "{}");
+  } catch (e) { throw e; }
 };
 
-/**
- * Analyzes a wound image encoded in base64.
- */
 export const analyzeWound = async (base64Image: string) => {
   const ai = getAiClient();
-
-  // Remove data URL prefix if present for processing
   const base64Data = base64Image.split(',')[1] || base64Image;
-
-  const prompt = `
-    Analyze this image of a wound. 
-    Provide a JSON assessment including:
-    1. Redness level (Low/Medium/High)
-    2. Infection probability (Percentage string)
-    3. Healing stage description
-    4. Boolean if urgent care is needed
-    5. Short advice
-  `;
-
   try {
+    // Using gemini-3-flash-preview for multimodal tasks with structured JSON output.
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash", // Using flash for multimodal analysis
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              mimeType: "image/jpeg", // Assuming jpeg for simplicity or detect from input
-              data: base64Data
-            }
-          },
-          { text: prompt }
-        ]
-      },
+      model: "gemini-3-flash-preview",
+      contents: { parts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }, { text: "Analyze this medical image. Return JSON with: conditionName, description (brief), severity (Low/Medium/High), specialistType (doctor needed), rednessLevel, infectionProbability, healingStage, urgentCareNeeded, advice." }] },
       config: {
         responseMimeType: "application/json",
-         responseSchema: {
+        responseSchema: {
           type: Type.OBJECT,
           properties: {
+            conditionName: { type: Type.STRING },
+            description: { type: Type.STRING },
+            severity: { type: Type.STRING },
+            specialistType: { type: Type.STRING },
             rednessLevel: { type: Type.STRING },
             infectionProbability: { type: Type.STRING },
             healingStage: { type: Type.STRING },
@@ -107,35 +194,20 @@ export const analyzeWound = async (base64Image: string) => {
         }
       }
     });
-
-    const text = response.text;
-    if (!text) return null;
-    return JSON.parse(text);
-  } catch (error) {
-    console.error("Wound analysis failed:", error);
-    throw error;
-  }
+    return JSON.parse(response.text || "{}");
+  } catch (e) { throw e; }
 };
 
-/**
- * General health chat assistant.
- */
-export const chatWithMedi = async (history: { role: string; parts: { text: string }[] }[], newMessage: string) => {
+export const chatWithMedi = async (history: any[], newMessage: string) => {
   const ai = getAiClient();
-
   try {
+    // Using gemini-3-flash-preview for general chat tasks.
     const chat = ai.chats.create({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       history: history,
-      config: {
-        systemInstruction: "You are Medi, a helpful and empathetic health assistant. Keep answers concise (under 100 words) and friendly. Always advise seeing a doctor for serious issues."
-      }
+      config: { systemInstruction: "You are Medi, a helpful health assistant. Provide concise, clear medical information based on user queries." }
     });
-
     const result = await chat.sendMessage({ message: newMessage });
     return result.text;
-  } catch (error) {
-    console.error("Chat failed:", error);
-    throw error;
-  }
+  } catch (e) { throw e; }
 };

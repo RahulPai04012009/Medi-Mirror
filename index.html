@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medi-Mirror</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8fafc;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #ffffff;
+        color: #1e293b;
+        overflow-x: hidden;
       }
       /* Custom scrollbar for webkit */
       ::-webkit-scrollbar {
@@ -25,15 +27,45 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
       }
-      .gradient-text {
-        background: linear-gradient(to right, #2563eb, #0d9488);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+      
+      .blob-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+        filter: blur(80px);
+        opacity: 0.4;
       }
-      .glass-card {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+      
+      .blob {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        animation: move 25s infinite alternate;
+      }
+      
+      .blob-1 { background: #fbbf24; top: -10%; left: -10%; animation-delay: 0s; }
+      .blob-2 { background: #f87171; bottom: -10%; right: -10%; animation-delay: -5s; }
+      .blob-3 { background: #2dd4bf; top: 40%; right: -5%; animation-delay: -10s; }
+      .blob-4 { background: #60a5fa; bottom: 20%; left: -5%; animation-delay: -15s; }
+
+      @keyframes move {
+        from { transform: translate(0, 0) scale(1); }
+        to { transform: translate(100px, 100px) scale(1.2); }
+      }
+
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .logo-shadow {
+        filter: drop-shadow(0 10px 15px rgba(30, 64, 175, 0.2));
       }
     </style>
   <script type="importmap">
@@ -50,6 +82,12 @@
 </script>
 </head>
   <body>
+    <div class="blob-bg">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+      <div class="blob blob-4"></div>
+    </div>
     <div id="root"></div>
   </body>
 </html>

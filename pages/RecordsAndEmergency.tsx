@@ -1,50 +1,10 @@
 import React, { useState } from 'react';
-import { FileText, Download, Phone, Share2, Shield, Bell, LogOut, ChevronRight, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Phone, Share2, Shield, Bell, RefreshCcw, ChevronRight, 
+  User, Watch, Bluetooth, Smartphone, X, CheckCircle 
+} from 'lucide-react';
 import { UserProfile } from '../types';
-
-// --- Records ---
-export const Records: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('reports');
-
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-slate-800">My Records</h2>
-        <button className="text-blue-600 font-semibold text-2xl">+</button>
-      </div>
-
-      <div className="flex p-1 bg-slate-100 rounded-xl">
-        {['reports', 'scans', 'meds'].map(tab => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg capitalize transition-all ${activeTab === tab ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        {/* Mock Data */}
-        {[1, 2, 3].map(i => (
-          <div key={i} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex justify-between items-center">
-             <div className="flex gap-3 items-center">
-               <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                 <FileText size={20} />
-               </div>
-               <div>
-                 <h4 className="font-semibold text-slate-800">Blood Test Result</h4>
-                 <p className="text-xs text-slate-400">Oct 12, 2023 • Dr. Wilson</p>
-               </div>
-             </div>
-             <button className="text-slate-300 hover:text-blue-600"><Download size={20} /></button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // --- Emergency ---
 export const Emergency: React.FC<{ user: UserProfile }> = ({ user }) => {
@@ -61,8 +21,8 @@ export const Emergency: React.FC<{ user: UserProfile }> = ({ user }) => {
         </button>
         <button className="bg-white text-slate-800 p-6 rounded-2xl shadow-sm border border-red-100 flex flex-col items-center gap-2 active:scale-95 transition-transform">
            <Phone size={32} className="text-red-500" />
-           <span className="font-bold text-lg">Contact {user.emergencyContact.relation}</span>
-           <span className="text-xs text-slate-400">{user.emergencyContact.name}</span>
+           <span className="font-bold text-lg">Contact {user.emergencyContact.relation || 'Contact'}</span>
+           <span className="text-xs text-slate-400 truncate w-full">{user.emergencyContact.name}</span>
         </button>
       </div>
 
@@ -97,11 +57,36 @@ export const Emergency: React.FC<{ user: UserProfile }> = ({ user }) => {
 
 // --- Settings ---
 export const SettingsPage: React.FC = () => {
+  const [showPairing, setShowPairing] = useState(false);
+  const [pairingStep, setPairingStep] = useState(1);
+  const isWatchConnected = localStorage.getItem('medimirror_watch_connected') === 'true';
+
+  const handleReset = () => {
+    if (window.confirm("This will clear all your data. Are you sure?")) {
+      localStorage.clear();
+      window.location.href = '/'; 
+    }
+  };
+
+  const startPairing = () => {
+    setShowPairing(true);
+    setPairingStep(1);
+    setTimeout(() => setPairingStep(2), 2000);
+    setTimeout(() => setPairingStep(3), 4500);
+  };
+
+  const completePairing = () => {
+    localStorage.setItem('medimirror_watch_connected', 'true');
+    setShowPairing(false);
+    window.location.reload();
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
       <h2 className="text-2xl font-bold text-slate-800">Settings</h2>
 
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+      {/* Profile & Accounts */}
+      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
          {[
            { icon: User, label: 'Edit Profile' },
            { icon: Shield, label: 'Privacy & Security' },
@@ -119,17 +104,85 @@ export const SettingsPage: React.FC = () => {
          ))}
       </div>
 
-      <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-        <h4 className="font-semibold text-blue-800 mb-1">Go Premium</h4>
-        <p className="text-xs text-blue-600 mb-3">Unlock unlimited AI scans and video consultations.</p>
-        <button className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-medium">Upgrade</button>
+      {/* Devices & Wearables */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Wearables & Sync</h3>
+        <div className="flex items-center justify-between">
+           <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-xl ${isWatchConnected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                <Watch size={24} />
+              </div>
+              <div>
+                <p className="font-bold text-slate-800 text-sm">Apple Watch</p>
+                <p className="text-xs text-slate-400">{isWatchConnected ? 'Connected via HealthKit' : 'Not Linked'}</p>
+              </div>
+           </div>
+           <button 
+            onClick={isWatchConnected ? () => { localStorage.setItem('medimirror_watch_connected', 'false'); window.location.reload(); } : startPairing}
+            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all ${
+              isWatchConnected ? 'text-red-500 bg-red-50' : 'text-blue-600 bg-blue-50'
+            }`}
+           >
+             {isWatchConnected ? 'Disconnect' : 'Connect'}
+           </button>
+        </div>
       </div>
 
-      <button className="w-full flex items-center justify-center gap-2 text-red-500 font-medium py-4">
-        <LogOut size={20} /> Log Out
+      <div className="p-4 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl text-white shadow-lg">
+        <h4 className="font-bold mb-1 text-sm flex items-center gap-2">
+           Premium Health Reports <CheckCircle size={14} className="text-blue-200" />
+        </h4>
+        <p className="text-xs text-blue-100 mb-4 leading-relaxed opacity-90">Get AI-generated summaries of your wearable data to share with your cardiologist.</p>
+        <button className="text-xs bg-white text-blue-600 px-4 py-2.5 rounded-xl font-black shadow-md">Get Early Access</button>
+      </div>
+
+      <button 
+        onClick={handleReset}
+        className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-500 font-medium py-4 transition-colors"
+      >
+        <RefreshCcw size={18} /> Reset All Data
       </button>
 
-      <p className="text-center text-xs text-slate-300 mt-10">Version 1.0.0 • HIPAA Compliant</p>
+      {/* Pairing Simulation Modal */}
+      {showPairing && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-center justify-center p-6">
+           <div className="bg-white w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center text-center animate-slide-up">
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
+                  <Watch size={48} className={pairingStep === 2 ? 'animate-bounce' : ''} />
+                </div>
+                {pairingStep === 2 && (
+                  <div className="absolute -top-2 -right-2">
+                    <Bluetooth size={24} className="text-blue-500 animate-pulse" />
+                  </div>
+                )}
+              </div>
+
+              <h3 className="text-xl font-black text-slate-800 mb-2">
+                {pairingStep === 1 ? 'Searching Devices' : 
+                 pairingStep === 2 ? 'Pairing Watch' : 'Sync Successful'}
+              </h3>
+              <p className="text-sm text-slate-400 mb-10 px-4">
+                {pairingStep === 1 ? 'Keep your Apple Watch close to your iPhone...' : 
+                 pairingStep === 2 ? 'Establishing secure Bluetooth connection...' : 
+                 'Medi-Mirror is now connected to your Apple Health data.'}
+              </p>
+
+              {pairingStep === 3 ? (
+                <button 
+                  onClick={completePairing}
+                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl shadow-slate-200"
+                >
+                  Continue to Dashboard
+                </button>
+              ) : (
+                <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+              )}
+           </div>
+        </div>
+      )}
+
+      <p className="text-center text-[10px] text-slate-300 mt-10 uppercase tracking-widest font-bold">Medi-Mirror v1.1.0 • Wearable Ready</p>
     </div>
   );
 };
