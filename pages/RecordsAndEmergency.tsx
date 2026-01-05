@@ -1,53 +1,54 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Phone, Share2, Shield, Bell, RefreshCcw, ChevronRight, 
-  User, Watch, Bluetooth, Smartphone, X, CheckCircle 
+  User, Watch, Bluetooth, Smartphone, X, CheckCircle, ArrowLeft, Save
 } from 'lucide-react';
 import { UserProfile } from '../types';
 
 // --- Emergency ---
 export const Emergency: React.FC<{ user: UserProfile }> = ({ user }) => {
   return (
-    <div className="p-6 bg-red-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-red-700 mb-6 flex items-center gap-2">
+    <div className="p-6 bg-red-50 dark:bg-red-950 min-h-screen transition-colors">
+      <h2 className="text-2xl font-bold text-red-700 dark:text-red-400 mb-6 flex items-center gap-2">
         <span className="animate-pulse">🚨</span> Emergency Mode
       </h2>
 
       <div className="grid grid-cols-2 gap-4 mb-8">
-        <button className="bg-red-600 text-white p-6 rounded-2xl shadow-red-300 shadow-lg flex flex-col items-center gap-2 active:scale-95 transition-transform">
+        <button className="bg-red-600 text-white p-6 rounded-2xl shadow-red-300 dark:shadow-none shadow-lg flex flex-col items-center gap-2 active:scale-95 transition-transform">
            <Phone size={32} />
            <span className="font-bold text-lg">Call 911</span>
         </button>
-        <button className="bg-white text-slate-800 p-6 rounded-2xl shadow-sm border border-red-100 flex flex-col items-center gap-2 active:scale-95 transition-transform">
+        <button className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white p-6 rounded-2xl shadow-sm border border-red-100 dark:border-red-900 flex flex-col items-center gap-2 active:scale-95 transition-transform">
            <Phone size={32} className="text-red-500" />
            <span className="font-bold text-lg">Contact {user.emergencyContact.relation || 'Contact'}</span>
-           <span className="text-xs text-slate-400 truncate w-full">{user.emergencyContact.name}</span>
+           <span className="text-xs text-slate-400 dark:text-slate-500 truncate w-full">{user.emergencyContact.name}</span>
         </button>
       </div>
 
-      <button className="w-full bg-slate-900 text-white py-4 rounded-xl flex items-center justify-center gap-3 mb-8 shadow-lg">
+      <button className="w-full bg-slate-900 dark:bg-slate-800 text-white py-4 rounded-xl flex items-center justify-center gap-3 mb-8 shadow-lg">
         <Share2 size={20} /> Share Live Location
       </button>
 
-      <div className="bg-white p-6 rounded-2xl border-l-4 border-red-500 shadow-md">
-        <h3 className="font-bold text-slate-800 mb-4 uppercase tracking-wider text-sm">Paramedic Info</h3>
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-red-500 shadow-md transition-colors">
+        <h3 className="font-bold text-slate-800 dark:text-white mb-4 uppercase tracking-wider text-sm">Paramedic Info</h3>
         <div className="grid grid-cols-2 gap-y-4 text-sm">
           <div>
-            <p className="text-slate-400">Name</p>
-            <p className="font-semibold">{user.name}</p>
+            <p className="text-slate-400 dark:text-slate-500">Name</p>
+            <p className="font-semibold dark:text-slate-200">{user.name}</p>
           </div>
           <div>
-            <p className="text-slate-400">Blood Group</p>
-            <p className="font-semibold text-red-600 bg-red-50 inline-block px-2 rounded">{user.bloodGroup}</p>
+            <p className="text-slate-400 dark:text-slate-500">Blood Group</p>
+            <p className="font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 inline-block px-2 rounded">{user.bloodGroup}</p>
           </div>
           <div className="col-span-2">
-            <p className="text-slate-400">Allergies</p>
-            <p className="font-semibold text-slate-800">{user.allergies || 'None'}</p>
+            <p className="text-slate-400 dark:text-slate-500">Allergies</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-200">{user.allergies || 'None'}</p>
           </div>
           <div className="col-span-2">
-            <p className="text-slate-400">Conditions</p>
-            <p className="font-semibold text-slate-800">{user.conditions || 'None'}</p>
+            <p className="text-slate-400 dark:text-slate-500">Conditions</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-200">{user.conditions || 'None'}</p>
           </div>
         </div>
       </div>
@@ -55,9 +56,141 @@ export const Emergency: React.FC<{ user: UserProfile }> = ({ user }) => {
   );
 };
 
+// --- Edit Profile Overlay ---
+const EditProfileModal: React.FC<{ user: UserProfile, onSave: (u: UserProfile) => void, onClose: () => void }> = ({ user, onSave, onClose }) => {
+  const [formData, setFormData] = useState<UserProfile>({ ...user });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    if (name.startsWith('emergency')) {
+      const field = name.replace('emergency', '').toLowerCase();
+      setFormData(prev => ({
+        ...prev,
+        emergencyContact: { ...prev.emergencyContact, [field]: value }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-white dark:bg-slate-950 z-[100] overflow-y-auto transition-colors">
+      <div className="max-w-md mx-auto min-h-full flex flex-col p-6 space-y-8">
+        <div className="flex items-center justify-between sticky top-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md py-4 z-10 transition-colors">
+          <button onClick={onClose} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl text-slate-500 dark:text-slate-400">
+            <ArrowLeft size={20} />
+          </button>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">Edit Profile</h2>
+          <button onClick={handleSubmit} className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg">
+            <Save size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8 pb-32">
+          {/* General Info */}
+          <section className="space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Identity</h3>
+            <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 space-y-5 transition-colors">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Full Name</label>
+                <input name="name" value={formData.name} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-blue-500 transition-all" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Birth Date</label>
+                  <input name="dob" type="date" value={formData.dob} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Age</label>
+                  <input name="age" type="number" value={formData.age} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Vitals */}
+          <section className="space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Biometrics</h3>
+            <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 space-y-5 transition-colors">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Height (cm)</label>
+                  <input name="height" value={formData.height} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Weight (kg)</label>
+                  <input name="weight" value={formData.weight} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Blood Group</label>
+                <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700">
+                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+            </div>
+          </section>
+
+          {/* Medical Record */}
+          <section className="space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Medical Record</h3>
+            <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 space-y-5 transition-colors">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Allergies</label>
+                <textarea name="allergies" value={formData.allergies} onChange={handleChange} rows={2} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700 resize-none" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Existing Conditions</label>
+                <textarea name="conditions" value={formData.conditions} onChange={handleChange} rows={2} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700 resize-none" />
+              </div>
+            </div>
+          </section>
+
+          {/* Emergency Contact */}
+          <section className="space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Emergency Point</h3>
+            <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 space-y-5 transition-colors">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Contact Name</label>
+                <input name="emergencyName" value={formData.emergencyContact.name} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Relationship</label>
+                   <input name="emergencyRelation" value={formData.emergencyContact.relation} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700" />
+                 </div>
+                 <div>
+                   <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block">Phone</label>
+                   <input name="emergencyPhone" value={formData.emergencyContact.phone} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl p-4 text-slate-900 dark:text-white font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700" />
+                 </div>
+              </div>
+            </div>
+          </section>
+        </form>
+
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent dark:from-slate-950 dark:via-slate-950 transition-colors">
+          <button 
+            onClick={handleSubmit} 
+            className="w-full bg-blue-600 text-white py-5 rounded-[24px] font-black shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- Settings ---
-export const SettingsPage: React.FC = () => {
+export const SettingsPage: React.FC<{ user: UserProfile, onUpdateUser: (u: UserProfile) => void }> = ({ user, onUpdateUser }) => {
   const [showPairing, setShowPairing] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [pairingStep, setPairingStep] = useState(1);
   const isWatchConnected = localStorage.getItem('medimirror_watch_connected') === 'true';
 
@@ -82,45 +215,57 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-slate-800">Settings</h2>
+    <div className="p-6 space-y-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
+      <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Settings</h2>
 
       {/* Profile & Accounts */}
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm transition-colors">
+         <div 
+           onClick={() => setShowEditProfile(true)}
+           className="flex items-center justify-between p-4 border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+         >
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
+                <User size={20} />
+              </div>
+              <span className="font-medium text-slate-700 dark:text-slate-200">Edit Profile</span>
+            </div>
+            <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
+         </div>
+         
          {[
-           { icon: User, label: 'Edit Profile' },
            { icon: Shield, label: 'Privacy & Security' },
            { icon: Bell, label: 'Notifications' },
          ].map((item, i) => (
-           <div key={i} className="flex items-center justify-between p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 cursor-pointer">
+           <div key={i} className="flex items-center justify-between p-4 border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
                   <item.icon size={20} />
                 </div>
-                <span className="font-medium text-slate-700">{item.label}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200">{item.label}</span>
               </div>
-              <ChevronRight size={18} className="text-slate-300" />
+              <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
            </div>
          ))}
       </div>
 
       {/* Devices & Wearables */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Wearables & Sync</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm transition-colors">
+        <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Wearables & Sync</h3>
         <div className="flex items-center justify-between">
            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-xl ${isWatchConnected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+              <div className={`p-3 rounded-xl ${isWatchConnected ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
                 <Watch size={24} />
               </div>
               <div>
-                <p className="font-bold text-slate-800 text-sm">Apple Watch</p>
-                <p className="text-xs text-slate-400">{isWatchConnected ? 'Connected via HealthKit' : 'Not Linked'}</p>
+                <p className="font-bold text-slate-800 dark:text-white text-sm">Apple Watch</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{isWatchConnected ? 'Connected via HealthKit' : 'Not Linked'}</p>
               </div>
            </div>
            <button 
             onClick={isWatchConnected ? () => { localStorage.setItem('medimirror_watch_connected', 'false'); window.location.reload(); } : startPairing}
             className={`text-xs font-bold px-4 py-2 rounded-xl transition-all ${
-              isWatchConnected ? 'text-red-500 bg-red-50' : 'text-blue-600 bg-blue-50'
+              isWatchConnected ? 'text-red-500 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
             }`}
            >
              {isWatchConnected ? 'Disconnect' : 'Connect'}
@@ -128,7 +273,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="p-4 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl text-white shadow-lg">
+      <div className="p-4 bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 rounded-2xl text-white shadow-lg">
         <h4 className="font-bold mb-1 text-sm flex items-center gap-2">
            Premium Health Reports <CheckCircle size={14} className="text-blue-200" />
         </h4>
@@ -146,9 +291,9 @@ export const SettingsPage: React.FC = () => {
       {/* Pairing Simulation Modal */}
       {showPairing && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-center justify-center p-6">
-           <div className="bg-white w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center text-center animate-slide-up">
+           <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center text-center animate-slide-up transition-colors">
               <div className="relative mb-8">
-                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
+                <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
                   <Watch size={48} className={pairingStep === 2 ? 'animate-bounce' : ''} />
                 </div>
                 {pairingStep === 2 && (
@@ -158,11 +303,11 @@ export const SettingsPage: React.FC = () => {
                 )}
               </div>
 
-              <h3 className="text-xl font-black text-slate-800 mb-2">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">
                 {pairingStep === 1 ? 'Searching Devices' : 
                  pairingStep === 2 ? 'Pairing Watch' : 'Sync Successful'}
               </h3>
-              <p className="text-sm text-slate-400 mb-10 px-4">
+              <p className="text-sm text-slate-400 dark:text-slate-500 mb-10 px-4">
                 {pairingStep === 1 ? 'Keep your Apple Watch close to your iPhone...' : 
                  pairingStep === 2 ? 'Establishing secure Bluetooth connection...' : 
                  'Medi-Mirror is now connected to your Apple Health data.'}
@@ -171,18 +316,27 @@ export const SettingsPage: React.FC = () => {
               {pairingStep === 3 ? (
                 <button 
                   onClick={completePairing}
-                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl shadow-slate-200"
+                  className="w-full bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-xl shadow-slate-200 dark:shadow-none"
                 >
                   Continue to Dashboard
                 </button>
               ) : (
-                <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-blue-100 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
               )}
            </div>
         </div>
       )}
 
-      <p className="text-center text-[10px] text-slate-300 mt-10 uppercase tracking-widest font-bold">Medi-Mirror v1.1.0 • Wearable Ready</p>
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <EditProfileModal 
+          user={user} 
+          onSave={onUpdateUser} 
+          onClose={() => setShowEditProfile(false)} 
+        />
+      )}
+
+      <p className="text-center text-[10px] text-slate-300 dark:text-slate-700 mt-10 uppercase tracking-widest font-bold">Medi-Mirror v1.1.0 • Wearable Ready</p>
     </div>
   );
 };

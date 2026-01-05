@@ -1,4 +1,5 @@
 
+
 export interface UserProfile {
   name: string;
   email: string;
@@ -34,15 +35,47 @@ export enum AppRoute {
   MAP = 'map'
 }
 
+export interface Review {
+  id: string;
+  patientName: string;
+  rating: number;
+  date: string;
+  comment: string;
+}
+
+export interface ClinicFacilities {
+  wheelchair: boolean;
+  parking: boolean;
+  wifi: boolean;
+  emergency: boolean;
+  pharmacy: boolean;
+  lab: boolean;
+}
+
 export interface Doctor {
   id: string;
   name: string;
   specialty: string;
-  experience: string;
+  degrees: string[]; 
+  experience?: number; 
+  languages: string[];
+  licenseNumber?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  
   hospital: string;
+  address: string;
+  coordinates: { lat: number; lng: number };
+  distance?: number;
+  facilities: ClinicFacilities;
+  workingHours?: string;
+  consultationFee?: number;
+
   image: string;
-  available: boolean;
+  available?: boolean;
+  
   rating: number;
+  reviewCount: number;
+  reviews: Review[];
 }
 
 export interface Visit {

@@ -211,3 +211,42 @@ export const chatWithMedi = async (history: any[], newMessage: string) => {
     return result.text;
   } catch (e) { throw e; }
 };
+
+/**
+ * Estimates calories burned for a specific activity, duration, and intensity.
+ */
+export const estimateActivityCalories = async (activityName: string, durationMinutes: number, intensity: string) => {
+  const ai = getAiClient();
+  const prompt = `
+    Calculate estimated calories burned for a standard adult performing:
+    Activity: ${activityName}
+    Duration: ${durationMinutes} minutes
+    Intensity: ${intensity}
+
+    Return JSON with:
+    1. calories (number)
+    2. explanation (short string explaining the calculation factor used)
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            calories: { type: Type.NUMBER },
+            explanation: { type: Type.STRING }
+          }
+        }
+      }
+    });
+    return JSON.parse(response.text || "{}");
+  } catch (e) {
+    console.error("Calorie estimation failed:", e);
+    // Fallback simple calculation if AI fails
+    return { calories: durationMinutes * 5, explanation: "Estimation based on average METs (Offline Fallback)." };
+  }
+};

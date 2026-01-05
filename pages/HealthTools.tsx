@@ -12,15 +12,15 @@ import { SymptomAnalysis, WoundAnalysis, ChatMessage, Place } from '../types';
 
 // --- Shared Components ---
 const LoadingOverlay: React.FC<{ text: string }> = ({ text }) => (
-  <div className="fixed inset-0 bg-white/95 z-[100] flex flex-col items-center justify-center backdrop-blur-xl">
+  <div className="fixed inset-0 bg-white/95 dark:bg-slate-900/95 z-[100] flex flex-col items-center justify-center backdrop-blur-xl transition-colors">
     <div className="relative mb-8">
-      <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-600 rounded-[30px] animate-spin"></div>
+      <div className="w-20 h-20 border-4 border-blue-100 dark:border-slate-700 border-t-blue-600 dark:border-t-blue-500 rounded-[30px] animate-spin"></div>
       <div className="absolute inset-0 flex items-center justify-center">
         <Sparkles size={28} className="text-blue-500 animate-pulse" />
       </div>
     </div>
-    <p className="text-slate-900 font-black text-xl mb-1 tracking-tight">{text}</p>
-    <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] animate-pulse">Consulting Gemini Bio-AI</p>
+    <p className="text-slate-900 dark:text-white font-black text-xl mb-1 tracking-tight">{text}</p>
+    <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-[0.2em] animate-pulse">Consulting Gemini Bio-AI</p>
   </div>
 );
 
@@ -62,14 +62,14 @@ const SymptomChecker: React.FC = () => {
       {!result ? (
         <div className="flex-1 flex flex-col p-8 space-y-8 overflow-y-auto pb-32">
           <div className="space-y-2">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Diagnostic Lab</h2>
-            <p className="text-slate-500 text-sm font-medium">Describe your symptoms to our medical AI.</p>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter transition-colors">Diagnostic Lab</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Describe your symptoms to our medical AI.</p>
           </div>
 
-          <div className="bg-white rounded-[40px] p-6 shadow-2xl shadow-blue-100/30 border border-slate-50 space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-[40px] p-6 shadow-2xl shadow-blue-100/30 dark:shadow-none border border-slate-50 dark:border-slate-800 space-y-4 transition-colors">
             <div className="flex items-center justify-between px-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Consultation Input</span>
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl cursor-pointer hover:bg-blue-100 transition-colors">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Consultation Input</span>
+              <div className="p-2.5 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-2xl cursor-pointer hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors">
                 <Mic size={20} />
               </div>
             </div>
@@ -77,31 +77,31 @@ const SymptomChecker: React.FC = () => {
             <textarea 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="w-full h-40 text-slate-800 bg-transparent focus:outline-none resize-none placeholder:text-slate-300 font-bold text-lg leading-relaxed"
+              className="w-full h-40 text-slate-800 dark:text-slate-100 bg-transparent focus:outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 font-bold text-lg leading-relaxed"
               placeholder="e.g., I've had a recurring migraine since this morning with slight nausea..."
             />
 
-            <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
+            <div className="pt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between transition-colors">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={16} className="text-teal-500" />
-                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Secured • HIPAA</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">Secured • HIPAA</span>
               </div>
-              <p className="text-[10px] text-slate-300 font-bold">{input.length} characters</p>
+              <p className="text-[10px] text-slate-300 dark:text-slate-600 font-bold">{input.length} characters</p>
             </div>
           </div>
 
           {showQuickSelect && (
             <div className="space-y-4">
               <div className="flex justify-between items-center px-2">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Common Indicators</h3>
-                <button onClick={() => setShowQuickSelect(false)} className="text-[10px] font-black text-blue-600">Hide All</button>
+                <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Common Indicators</h3>
+                <button onClick={() => setShowQuickSelect(false)} className="text-[10px] font-black text-blue-600 dark:text-blue-400">Hide All</button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {commonSymptoms.map((s, idx) => (
                   <button
                     key={idx}
                     onClick={() => addSymptom(s.label)}
-                    className="flex items-center gap-2.5 px-5 py-3 bg-white border border-slate-100 rounded-[20px] text-xs font-black text-slate-600 hover:border-blue-400 hover:text-blue-600 transition-all active:scale-90 shadow-sm"
+                    className="flex items-center gap-2.5 px-5 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[20px] text-xs font-black text-slate-600 dark:text-slate-300 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-90 shadow-sm"
                   >
                     {s.icon} {s.label}
                   </button>
@@ -110,11 +110,11 @@ const SymptomChecker: React.FC = () => {
             </div>
           )}
 
-          <div className="fixed bottom-24 left-8 right-8">
+          <div className="pt-2">
             <button 
               onClick={handleAnalyze}
               disabled={loading || !input}
-              className="w-full bg-slate-900 text-white py-6 rounded-[30px] font-black text-lg shadow-2xl shadow-blue-900/20 flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale"
+              className="w-full bg-slate-900 dark:bg-blue-600 text-white py-6 rounded-[30px] font-black text-lg shadow-xl shadow-blue-900/10 dark:shadow-blue-600/20 flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale"
             >
               <Search size={22} />
               Start Analysis
@@ -122,19 +122,19 @@ const SymptomChecker: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col p-8 space-y-8 overflow-y-auto pb-32 animate-fade-in bg-white">
+        <div className="flex-1 flex flex-col p-8 space-y-8 overflow-y-auto pb-32 animate-fade-in bg-white dark:bg-slate-950 transition-colors">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => setResult(null)}
-              className="p-3 bg-slate-50 rounded-2xl text-slate-500 transition-all hover:bg-slate-100"
+              className="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl text-slate-500 dark:text-slate-400 transition-all hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <ArrowLeft size={20} />
             </button>
             <div className="text-center">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Patient Report</h4>
-              <p className="text-xs font-bold text-slate-900">{new Date().toLocaleDateString()}</p>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Patient Report</h4>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">{new Date().toLocaleDateString()}</p>
             </div>
-            <button className="p-3 bg-slate-50 rounded-2xl text-slate-500">
+            <button className="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl text-slate-500 dark:text-slate-400">
               <Share2 size={20} />
             </button>
           </div>
@@ -142,13 +142,13 @@ const SymptomChecker: React.FC = () => {
           {/* Clinical Banner */}
           <div className={`p-8 rounded-[40px] relative overflow-hidden ${
             result.seeDoctor 
-              ? 'bg-red-50 text-red-900' 
-              : 'bg-green-50 text-green-900'
+              ? 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100' 
+              : 'bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-100'
           }`}>
             <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-white/30 rounded-full blur-2xl"></div>
             
             <div className="flex items-center gap-3 mb-6">
-              <div className={`p-3 rounded-2xl ${result.seeDoctor ? 'bg-red-100' : 'bg-green-100'}`}>
+              <div className={`p-3 rounded-2xl ${result.seeDoctor ? 'bg-red-100 dark:bg-red-800/50' : 'bg-green-100 dark:bg-green-800/50'}`}>
                 {result.seeDoctor ? <AlertTriangle size={24} /> : <CheckCircle size={24} />}
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest bg-white/40 px-3 py-1.5 rounded-xl">
@@ -165,62 +165,62 @@ const SymptomChecker: React.FC = () => {
           </div>
 
           {/* Medical Insights Card */}
-          <div className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-lg shadow-blue-50 space-y-5">
+          <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 p-6 shadow-lg shadow-blue-50 dark:shadow-none space-y-5 transition-colors">
              <div className="flex items-center gap-2 mb-2">
                 <BookOpen size={18} className="text-blue-500" />
-                <h4 className="text-xs font-black uppercase tracking-widest text-slate-800">Understanding the Condition</h4>
+                <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">Understanding the Condition</h4>
              </div>
              
              <div>
-               <h5 className="font-bold text-slate-900 mb-1">What is it?</h5>
-               <p className="text-sm text-slate-500 leading-relaxed">{result.explanation}</p>
+               <h5 className="font-bold text-slate-900 dark:text-white mb-1">What is it?</h5>
+               <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{result.explanation}</p>
              </div>
 
-             <div className="pt-4 border-t border-slate-50">
-               <h5 className="font-bold text-slate-900 mb-1">Recommended Treatment</h5>
-               <p className="text-sm text-slate-500 leading-relaxed">{result.treatment}</p>
+             <div className="pt-4 border-t border-slate-50 dark:border-slate-800">
+               <h5 className="font-bold text-slate-900 dark:text-white mb-1">Recommended Treatment</h5>
+               <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{result.treatment}</p>
              </div>
           </div>
 
           {/* Medicines Card */}
           {result.suggestedMedicines && result.suggestedMedicines.length > 0 && (
-             <div className="bg-teal-50 rounded-[32px] border border-teal-100 p-6 space-y-4">
+             <div className="bg-teal-50 dark:bg-teal-900/20 rounded-[32px] border border-teal-100 dark:border-teal-900/50 p-6 space-y-4 transition-colors">
                <div className="flex items-center gap-2 mb-2">
-                  <Pill size={18} className="text-teal-600" />
-                  <h4 className="text-xs font-black uppercase tracking-widest text-teal-800">Suggested Relief (OTC)</h4>
+                  <Pill size={18} className="text-teal-600 dark:text-teal-400" />
+                  <h4 className="text-xs font-black uppercase tracking-widest text-teal-800 dark:text-teal-200">Suggested Relief (OTC)</h4>
                </div>
                <div className="flex flex-wrap gap-2">
                  {result.suggestedMedicines.map((med, i) => (
-                   <span key={i} className="px-3 py-1.5 bg-white text-teal-700 font-bold text-xs rounded-lg border border-teal-100 shadow-sm">
+                   <span key={i} className="px-3 py-1.5 bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 font-bold text-xs rounded-lg border border-teal-100 dark:border-teal-900 shadow-sm">
                      {med}
                    </span>
                  ))}
                </div>
-               <p className="text-[10px] text-teal-600 italic mt-2">*Please consult a pharmacist before taking any medication.</p>
+               <p className="text-[10px] text-teal-600 dark:text-teal-400 italic mt-2">*Please consult a pharmacist before taking any medication.</p>
              </div>
           )}
 
           {/* Pathology Section */}
           <div className="space-y-4">
              <div className="flex items-center justify-between px-1">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Analyzed Pathologies</h4>
-               <Info size={14} className="text-slate-300" />
+               <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Analyzed Pathologies</h4>
+               <Info size={14} className="text-slate-300 dark:text-slate-600" />
              </div>
              <div className="space-y-4">
                {result.conditions.map((c, i) => (
-                 <div key={i} className="bg-slate-50 p-6 rounded-[30px] border border-slate-100 group transition-all hover:shadow-lg hover:bg-white">
+                 <div key={i} className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[30px] border border-slate-100 dark:border-slate-800 group transition-all hover:shadow-lg hover:bg-white dark:hover:bg-slate-800">
                    <div className="flex justify-between items-start mb-4">
                      <div>
-                       <p className="text-lg font-black text-slate-900 tracking-tight">{c.name}</p>
-                       <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Confidence Level: {c.probability}</p>
+                       <p className="text-lg font-black text-slate-900 dark:text-white tracking-tight">{c.name}</p>
+                       <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-0.5">Confidence Level: {c.probability}</p>
                      </div>
                      <div className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest ${
-                       c.severity === 'high' ? 'bg-red-100 text-red-600' : c.severity === 'medium' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                       c.severity === 'high' ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400' : c.severity === 'medium' ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
                      }`}>
                        {c.severity}
                      </div>
                    </div>
-                   <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                   <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                       <div 
                         className={`h-full transition-all duration-1000 ${
                           c.severity === 'high' ? 'bg-red-500' : c.severity === 'medium' ? 'bg-orange-500' : 'bg-blue-500'
@@ -237,21 +237,21 @@ const SymptomChecker: React.FC = () => {
           <div className="grid grid-cols-2 gap-4 pt-4">
             <button 
               onClick={() => navigate(`/map?q=${encodeURIComponent(result.specialistType || 'General Physician')}`)}
-              className="flex items-center gap-3 p-6 bg-slate-900 text-white rounded-[32px] font-black text-xs active:scale-95 transition-all shadow-xl"
+              className="flex items-center gap-3 p-6 bg-slate-900 dark:bg-blue-600 text-white rounded-[32px] font-black text-xs active:scale-95 transition-all shadow-xl"
             >
-              <MapPin size={18} className="text-blue-400" /> 
+              <MapPin size={18} className="text-blue-400 dark:text-white" /> 
               <span>Find {result.specialistType || 'Doctors'}</span>
             </button>
             <button 
               onClick={() => navigate('/doctors')}
-              className="flex items-center gap-3 p-6 bg-blue-50 text-blue-700 rounded-[32px] font-black text-xs active:scale-95 transition-all"
+              className="flex items-center gap-3 p-6 bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-400 rounded-[32px] font-black text-xs active:scale-95 transition-all"
             >
               <Clock size={18} /> Book Visit
             </button>
           </div>
 
           <button 
-            className="w-full py-6 flex items-center justify-center gap-2 text-slate-400 font-black text-[10px] uppercase tracking-widest"
+            className="w-full py-6 flex items-center justify-center gap-2 text-slate-400 dark:text-slate-600 font-black text-[10px] uppercase tracking-widest"
           >
             <Download size={14} /> Export Medical PDF
           </button>
@@ -318,31 +318,31 @@ const WoundScanner: React.FC = () => {
   };
 
   return (
-    <div className="p-8 h-full flex flex-col relative bg-white">
+    <div className="p-8 h-full flex flex-col relative bg-white dark:bg-slate-950 transition-colors">
       {loading && <LoadingOverlay text="Vision AI Scanning" />}
       
       <div className="mb-8">
-        <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Vision Scanner</h2>
-        <p className="text-slate-400 font-medium text-sm">Upload a photo for instant tissue analysis.</p>
+        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter transition-colors">Vision Scanner</h2>
+        <p className="text-slate-400 dark:text-slate-500 font-medium text-sm">Upload a photo for instant tissue analysis.</p>
       </div>
 
       {!image ? (
         <div className="flex-1 flex flex-col justify-center items-center">
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="w-full h-80 border-2 border-dashed border-slate-200 rounded-[40px] flex flex-col items-center justify-center bg-slate-50 text-slate-400 hover:bg-slate-100 hover:border-blue-400 transition-all cursor-pointer group"
+            className="w-full h-80 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[40px] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all cursor-pointer group"
           >
-            <div className="p-6 bg-white rounded-full shadow-lg mb-6 group-hover:scale-110 transition-transform">
-              <Camera size={48} className="text-blue-600" />
+            <div className="p-6 bg-white dark:bg-slate-800 rounded-full shadow-lg mb-6 group-hover:scale-110 transition-transform">
+              <Camera size={48} className="text-blue-600 dark:text-blue-500" />
             </div>
-            <p className="font-black text-slate-800 tracking-tight">Capture or Upload</p>
+            <p className="font-black text-slate-800 dark:text-slate-200 tracking-tight">Capture or Upload</p>
             <p className="text-[10px] font-bold uppercase tracking-widest mt-2">Maximum 5MB JPG/PNG</p>
           </div>
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
         </div>
       ) : (
         <div className="space-y-6 overflow-y-auto pb-32">
-          <div className="relative rounded-[40px] overflow-hidden shadow-2xl h-80 bg-black border-4 border-white">
+          <div className="relative rounded-[40px] overflow-hidden shadow-2xl h-80 bg-black border-4 border-white dark:border-slate-800">
             <img src={image} alt="Wound" className="w-full h-full object-cover" />
             <button 
               onClick={() => { setImage(null); setResult(null); setNearbyDoctors([]); }}
@@ -356,46 +356,46 @@ const WoundScanner: React.FC = () => {
             <div className="space-y-6 animate-fade-in">
               {/* Diagnosis Header */}
               <div>
-                <h3 className="text-2xl font-black text-slate-900 mb-1">{result.conditionName || "Analysis Complete"}</h3>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1 transition-colors">{result.conditionName || "Analysis Complete"}</h3>
                 <div className="flex items-center gap-2">
                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${
-                     result.severity === 'High' ? 'bg-red-50 text-red-600 border-red-100' : 
-                     result.severity === 'Medium' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
-                     'bg-green-50 text-green-600 border-green-100'
+                     result.severity === 'High' ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900' : 
+                     result.severity === 'Medium' ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-900' : 
+                     'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-100 dark:border-green-900'
                    }`}>
                      Severity: {result.severity}
                    </span>
-                   <span className="text-xs text-slate-400 font-medium">Confidence: {result.infectionProbability}</span>
+                   <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Confidence: {result.infectionProbability}</span>
                 </div>
               </div>
 
               {/* Description & Advice */}
-              <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 space-y-4 transition-colors">
                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Description</h4>
-                    <p className="text-sm font-medium text-slate-700 leading-relaxed">{result.description}</p>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Description</h4>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">{result.description}</p>
                  </div>
-                 <div className="pt-4 border-t border-slate-200">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Clinical Advice</h4>
-                    <p className="text-sm font-medium text-slate-700 leading-relaxed">{result.advice}</p>
+                 <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Clinical Advice</h4>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">{result.advice}</p>
                  </div>
               </div>
 
               {/* Detailed Metrics */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tissue Redness</p>
-                   <p className={`text-lg font-black ${result.rednessLevel === 'High' ? 'text-red-500' : 'text-slate-800'}`}>{result.rednessLevel}</p>
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
+                   <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Tissue Redness</p>
+                   <p className={`text-lg font-black ${result.rednessLevel === 'High' ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'}`}>{result.rednessLevel}</p>
                 </div>
-                <div className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Healing Stage</p>
-                   <p className="text-lg font-black text-slate-800">{result.healingStage}</p>
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
+                   <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Healing Stage</p>
+                   <p className="text-lg font-black text-slate-800 dark:text-slate-200">{result.healingStage}</p>
                 </div>
               </div>
               
               {/* Urgent Care Button if needed */}
               {result.urgentCareNeeded && (
-                <button className="w-full bg-red-600 text-white py-5 rounded-[28px] font-black flex items-center justify-center gap-3 animate-pulse shadow-2xl shadow-red-200">
+                <button className="w-full bg-red-600 text-white py-5 rounded-[28px] font-black flex items-center justify-center gap-3 animate-pulse shadow-2xl shadow-red-200 dark:shadow-red-900/30">
                    <AlertTriangle size={24} /> Locate Urgent Care
                 </button>
               )}
@@ -403,12 +403,12 @@ const WoundScanner: React.FC = () => {
               {/* Nearest Specialists List */}
               <div className="space-y-4">
                  <div className="flex items-center justify-between px-1">
-                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                   <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                      Nearest {result.specialistType}s
                    </h4>
                    <button 
                     onClick={() => navigate(`/map?q=${encodeURIComponent(result.specialistType || 'Hospital')}`)}
-                    className="text-[10px] font-black text-blue-600 uppercase tracking-widest"
+                    className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest"
                    >
                      View Map
                    </button>
@@ -417,19 +417,19 @@ const WoundScanner: React.FC = () => {
                  {nearbyDoctors.length > 0 ? (
                    <div className="space-y-3">
                      {nearbyDoctors.map((doc, i) => (
-                       <div key={i} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                       <div key={i} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
                           <div className="flex items-center gap-3">
-                             <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Stethoscope size={18} /></div>
+                             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl"><Stethoscope size={18} /></div>
                              <div className="min-w-0 max-w-[150px]">
-                               <p className="text-xs font-bold text-slate-800 truncate">{doc.name}</p>
-                               <p className="text-[10px] text-slate-400 truncate">{doc.address || "Nearby"}</p>
+                               <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{doc.name}</p>
+                               <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{doc.address || "Nearby"}</p>
                              </div>
                           </div>
                           <a 
                             href={doc.uri}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-3 bg-slate-900 text-white rounded-xl active:scale-95 transition-transform"
+                            className="p-3 bg-slate-900 dark:bg-slate-800 text-white rounded-xl active:scale-95 transition-transform"
                           >
                             <Navigation size={16} />
                           </a>
@@ -437,8 +437,8 @@ const WoundScanner: React.FC = () => {
                      ))}
                    </div>
                  ) : (
-                   <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                      <p className="text-xs text-slate-400 font-medium">Searching nearby specialists...</p>
+                   <div className="text-center py-6 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                      <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Searching nearby specialists...</p>
                    </div>
                  )}
               </div>
@@ -494,11 +494,11 @@ export const Chat: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-white">
-            <div className="bg-white/80 backdrop-blur-xl p-5 border-b border-slate-50 flex items-center gap-4 sticky top-0 z-10">
-                <button onClick={() => navigate(-1)} className="p-3 bg-slate-50 rounded-2xl text-slate-500"><ArrowLeft /></button>
+        <div className="flex flex-col h-screen bg-white dark:bg-slate-950 transition-colors">
+            <div className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl p-5 border-b border-slate-50 dark:border-slate-800 flex items-center gap-4 sticky top-0 z-10 transition-colors">
+                <button onClick={() => navigate(-1)} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl text-slate-500 dark:text-slate-400"><ArrowLeft /></button>
                 <div className="flex-1">
-                    <h2 className="font-black text-slate-900 tracking-tight">Medi AI</h2>
+                    <h2 className="font-black text-slate-900 dark:text-white tracking-tight">Medi AI</h2>
                     <p className="text-[10px] font-bold text-green-500 flex items-center gap-1 uppercase tracking-widest">
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Encrypted Session
                     </p>
@@ -510,8 +510,8 @@ export const Chat: React.FC = () => {
                     <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] p-5 rounded-[28px] text-sm font-bold leading-relaxed ${
                             m.role === 'user' 
-                            ? 'bg-slate-900 text-white rounded-br-none shadow-xl' 
-                            : 'bg-slate-50 text-slate-800 border border-slate-100 rounded-bl-none'
+                            ? 'bg-slate-900 dark:bg-blue-600 text-white rounded-br-none shadow-xl' 
+                            : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-800 rounded-bl-none'
                         }`}>
                             {m.text}
                         </div>
@@ -519,7 +519,7 @@ export const Chat: React.FC = () => {
                 ))}
                 {isTyping && (
                     <div className="flex justify-start">
-                        <div className="bg-slate-50 p-5 rounded-[28px] rounded-bl-none border border-slate-100 flex gap-1.5">
+                        <div className="bg-slate-50 dark:bg-slate-900 p-5 rounded-[28px] rounded-bl-none border border-slate-100 dark:border-slate-800 flex gap-1.5">
                             <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></span>
                             <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-75"></span>
                             <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-150"></span>
@@ -529,16 +529,16 @@ export const Chat: React.FC = () => {
                 <div ref={bottomRef} />
             </div>
 
-            <div className="p-6 bg-white border-t border-slate-50">
-                <div className="flex items-center gap-3 bg-slate-50 rounded-[28px] p-2 pl-6">
+            <div className="p-6 bg-white dark:bg-slate-950 border-t border-slate-50 dark:border-slate-800 transition-colors">
+                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-[28px] p-2 pl-6 transition-colors">
                     <input 
-                        className="flex-1 bg-transparent border-none focus:outline-none text-slate-800 font-bold placeholder:text-slate-300"
+                        className="flex-1 bg-transparent border-none focus:outline-none text-slate-800 dark:text-slate-100 font-bold placeholder:text-slate-300 dark:placeholder:text-slate-600"
                         placeholder="Ask anything..."
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSend()}
                     />
-                    <button onClick={handleSend} className="w-12 h-12 bg-slate-900 rounded-2xl text-white shadow-xl flex items-center justify-center hover:bg-slate-800 transition-colors">
+                    <button onClick={handleSend} className="w-12 h-12 bg-slate-900 dark:bg-blue-600 rounded-2xl text-white shadow-xl flex items-center justify-center hover:bg-slate-800 dark:hover:bg-blue-500 transition-colors">
                         <Search size={20} />
                     </button>
                 </div>
@@ -552,11 +552,11 @@ export const ToolWrapper: React.FC = () => {
   const mode = searchParams.get('mode') || 'symptom';
 
   return (
-    <div className="h-full bg-white flex flex-col">
+    <div className="h-full bg-white dark:bg-slate-950 flex flex-col transition-colors">
       <div className="px-8 pt-8 pb-4">
-        <div className="flex p-1.5 bg-slate-100 rounded-[24px]">
-          <a href="?mode=symptom" className={`flex-1 py-4 text-center font-black text-[10px] uppercase tracking-widest rounded-[20px] transition-all ${mode === 'symptom' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Diagnostic</a>
-          <a href="?mode=wound" className={`flex-1 py-4 text-center font-black text-[10px] uppercase tracking-widest rounded-[20px] transition-all ${mode === 'wound' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Scanning</a>
+        <div className="flex p-1.5 bg-slate-100 dark:bg-slate-900 rounded-[24px] transition-colors">
+          <a href="?mode=symptom" className={`flex-1 py-4 text-center font-black text-[10px] uppercase tracking-widest rounded-[20px] transition-all ${mode === 'symptom' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Diagnostic</a>
+          <a href="?mode=wound" className={`flex-1 py-4 text-center font-black text-[10px] uppercase tracking-widest rounded-[20px] transition-all ${mode === 'wound' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Scanning</a>
         </div>
       </div>
       <div className="flex-1 overflow-hidden">

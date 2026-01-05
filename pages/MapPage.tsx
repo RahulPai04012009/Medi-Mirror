@@ -129,9 +129,9 @@ export const MapPage: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-50 min-h-screen">
+    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
       {/* Search Bar Header */}
-      <div className="bg-white px-4 pt-4 pb-2 sticky top-0 z-20 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 px-4 pt-4 pb-2 sticky top-0 z-20 shadow-sm transition-colors">
         <form onSubmit={handleSearch} className="relative group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
             <SearchIcon size={18} />
@@ -142,13 +142,13 @@ export const MapPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={activeTab === 'hospital' ? "Search symptoms (e.g. fever) or doctors..." : "Search medicine (e.g. Insulin)..."}
-            className="w-full pl-10 pr-10 py-3 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all text-sm outline-none"
+            className="w-full pl-10 pr-10 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white transition-all text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
           {searchQuery && (
             <button 
               type="button"
               onClick={clearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <X size={18} />
             </button>
@@ -161,7 +161,7 @@ export const MapPage: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'hospital'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
           >
             <Building2 size={14} /> Hospitals & Doctors
@@ -171,7 +171,7 @@ export const MapPage: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'pharmacy'
                 ? 'bg-teal-600 text-white shadow-md shadow-teal-200'
-                : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
           >
             <Pill size={14} /> Pharmacies & Medicines
@@ -180,7 +180,7 @@ export const MapPage: React.FC = () => {
       </div>
 
       {/* Map View */}
-      <div className="w-full h-60 bg-slate-200 shrink-0 border-b border-slate-200">
+      <div className="w-full h-60 bg-slate-200 dark:bg-slate-800 shrink-0 border-b border-slate-200 dark:border-slate-800">
         {location ? (
           <iframe
             width="100%"
@@ -191,70 +191,71 @@ export const MapPage: React.FC = () => {
             allowFullScreen
             loading="lazy"
             title="Map View"
+            className="dark:invert dark:grayscale dark:contrast-75" // CSS filter trick for dark mode maps
           ></iframe>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-400">
+          <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-500">
             <Loader2 className="animate-spin mr-2" /> Locating...
           </div>
         )}
       </div>
 
       {/* Results Header */}
-      <div className="px-6 py-4 flex justify-between items-center bg-slate-50/80 backdrop-blur">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+      <div className="px-6 py-4 flex justify-between items-center bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur transition-colors">
+        <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
           {activeQuery ? `Results for "${activeQuery}"` : `Nearby ${activeTab}s`}
         </h3>
-        <span className="text-[10px] font-medium text-slate-400">{places.length} found</span>
+        <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">{places.length} found</span>
       </div>
 
       {/* Results List */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
-             <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-             <p className="text-sm text-slate-500 font-medium">Medi is analyzing locations...</p>
+             <div className="w-12 h-12 border-4 border-blue-100 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
+             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Medi is analyzing locations...</p>
           </div>
         ) : error && places.length === 0 ? (
           <div className="text-center py-12 px-6">
-            <div className="inline-flex p-4 bg-orange-50 text-orange-500 rounded-full mb-4">
+            <div className="inline-flex p-4 bg-orange-50 dark:bg-orange-900/20 text-orange-500 dark:text-orange-400 rounded-full mb-4">
               <SearchIcon size={32} />
             </div>
-            <h4 className="font-bold text-slate-800 mb-2">No Results Found</h4>
-            <p className="text-sm text-slate-500 leading-relaxed">Try a different name or check your internet connection.</p>
+            <h4 className="font-bold text-slate-800 dark:text-white mb-2">No Results Found</h4>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Try a different name or check your internet connection.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {places.map((place, idx) => (
               <div 
                 key={idx} 
-                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
+                className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-3 rounded-2xl shrink-0 ${
-                    activeTab === 'hospital' ? 'bg-blue-50 text-blue-600' : 'bg-teal-50 text-teal-600'
+                    activeTab === 'hospital' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400'
                   }`}>
                     {place.reason?.includes("Doctor") || place.reason?.includes("Specialized") || place.reason?.includes("Hospital") ? <Stethoscope size={20} /> : <MapPin size={20} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-slate-800 text-sm truncate leading-tight mb-1">{place.name}</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate leading-tight mb-1">{place.name}</h3>
                     {place.reason && (
-                      <span className="inline-block text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 font-bold rounded-full mb-1 border border-blue-100">
+                      <span className="inline-block text-[10px] px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold rounded-full mb-1 border border-blue-100 dark:border-blue-900/50">
                         {place.reason}
                       </span>
                     )}
-                    <p className="text-xs text-slate-500 truncate mb-3">{place.address}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-3">{place.address}</p>
                     <div className="flex items-center gap-4">
                       <a 
                         href={place.uri} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-slate-900 px-4 py-2 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-4 py-2 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors shadow-sm"
                       >
                         <Navigation size={14} /> Get Directions
                       </a>
                       {place.distance !== undefined && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                          <Route size={12} className="text-slate-300" />
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                          <Route size={12} className="text-slate-300 dark:text-slate-600" />
                           <span>{place.distance.toFixed(1)} miles away</span>
                         </div>
                       )}
