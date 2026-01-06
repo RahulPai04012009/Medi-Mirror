@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, ChevronRight, Ruler, Search, 
-  TrendingUp, Calendar, X, Save
+  Calendar, X, Save
 } from 'lucide-react';
+import { HealthChart } from '../components/HealthChart';
 
 const MEASUREMENT_TYPES = [
   { id: 'weight', label: 'Weight', unit: 'lbs' },
@@ -38,7 +39,7 @@ export const BodyMeasurements: React.FC = () => {
   const [logs, setLogs] = useState<MeasurementLog[]>(() => {
     const saved = localStorage.getItem('medimirror_body_logs');
     return saved ? JSON.parse(saved) : [
-      { id: '1', typeId: 'weight', value: '204', date: '2024-09-15', time: '08:00', note: 'Morning weigh-in' }
+      { id: '1', typeId: 'weight', value: '204', date: new Date().toISOString().split('T')[0], time: '08:00', note: 'Morning weigh-in' }
     ];
   });
 
@@ -51,34 +52,29 @@ export const BodyMeasurements: React.FC = () => {
     localStorage.setItem('medimirror_body_logs', JSON.stringify(logs));
   }, [logs]);
 
-  // --- BMI Calculation Logic ---
-  // Whenever logs change, check if we need to auto-generate a BMI entry
+  // BMI Calculation
   useEffect(() => {
-    // Get latest weight
     const weightLogs = logs.filter(l => l.typeId === 'weight').sort((a,b) => b.date.localeCompare(a.date));
     const heightLogs = logs.filter(l => l.typeId === 'height').sort((a,b) => b.date.localeCompare(a.date));
 
     if (weightLogs.length > 0 && heightLogs.length > 0) {
       const latestWeight = parseFloat(weightLogs[0].value);
-      const latestHeightStr = heightLogs[0].value; // Assuming format like "5'10" or just inches
+      const latestHeightStr = heightLogs[0].value;
       
-      // Simple parser for ft'in" or cm
       let heightInInches = 0;
       if (latestHeightStr.includes("'")) {
         const parts = latestHeightStr.split("'");
         heightInInches = (parseInt(parts[0]) * 12) + (parseInt(parts[1]) || 0);
       } else {
-        heightInInches = parseFloat(latestHeightStr); // Assume inches if just number
+        heightInInches = parseFloat(latestHeightStr);
       }
 
       if (latestWeight > 0 && heightInInches > 0) {
         const bmi = (latestWeight / (heightInInches * heightInInches)) * 703;
         const bmiValue = bmi.toFixed(1);
 
-        // Check if we already have a BMI log for this date/weight combo to avoid infinite loop
         const existingBMI = logs.find(l => l.typeId === 'bmi' && l.date === weightLogs[0].date);
         if (!existingBMI || existingBMI.value !== bmiValue) {
-           // Add BMI Log
            const newBMI: MeasurementLog = {
              id: Date.now().toString() + '_bmi',
              typeId: 'bmi',
@@ -87,7 +83,6 @@ export const BodyMeasurements: React.FC = () => {
              time: weightLogs[0].time,
              note: 'Auto-calculated'
            };
-           // Use functional update to avoid dependency loop issues, check existence inside
            setLogs(prev => {
              const exists = prev.find(p => p.id === newBMI.id);
              return exists ? prev : [newBMI, ...prev];
@@ -119,7 +114,6 @@ export const BodyMeasurements: React.FC = () => {
     return typeLogs.reduce((prev, current) => (prev.date > current.date) ? prev : current);
   };
 
-  // Sections
   const activeMetrics = MEASUREMENT_TYPES.filter(t => getLatestLog(t.id) !== null);
   const inactiveMetrics = MEASUREMENT_TYPES.filter(t => getLatestLog(t.id) === null);
 
@@ -128,6 +122,11 @@ export const BodyMeasurements: React.FC = () => {
     const metricDef = MEASUREMENT_TYPES.find(m => m.id === selectedMetric);
     const metricLogs = logs.filter(l => l.typeId === selectedMetric).sort((a,b) => b.date.localeCompare(a.date));
     const latest = metricLogs[0];
+
+    const chartData = metricLogs.map(l => ({
+        date: l.date,
+        value: parseFloat(l.value)
+    }));
 
     return (
       <div className="min-h-screen bg-black text-white pb-10 animate-slide-up">
@@ -163,23 +162,15 @@ export const BodyMeasurements: React.FC = () => {
             </div>
           )}
 
-          {/* Graph Placeholder */}
-          {metricLogs.length > 0 && (
-            <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800 h-64 flex flex-col justify-between">
-               <div className="flex justify-between items-center">
-                 <span className="text-xs font-bold text-zinc-500">Last 6 Months</span>
-                 <TrendingUp size={16} className="text-purple-500" />
-               </div>
-               <div className="flex items-end justify-around h-40 gap-2">
-                  {metricLogs.slice(0, 7).reverse().map((log, i) => (
-                    <div key={i} className="flex-1 flex flex-col justify-end items-center gap-2 group">
-                       <span className="text-[9px] text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">{log.value}</span>
-                       <div className="w-full bg-purple-900/50 rounded-t-md relative hover:bg-purple-600 transition-colors" style={{ height: `${Math.min(100, (parseFloat(log.value)/parseFloat(latest.value || '1')) * 60)}%` }}></div>
-                       <span className="text-[9px] text-zinc-600">{log.date.slice(5)}</span>
-                    </div>
-                  ))}
-               </div>
-            </div>
+          {/* New Chart Component */}
+          {latest && (
+              <HealthChart 
+                data={chartData} 
+                barColor="bg-purple-600" 
+                textColor="text-purple-500" 
+                unit={metricDef?.unit || ''} 
+                aggregationType="latest" 
+              />
           )}
 
           {/* Options */}
@@ -237,7 +228,7 @@ export const BodyMeasurements: React.FC = () => {
 
       <div className="px-4 mt-4 space-y-6">
         
-        {/* Active Metrics Section (Older/Today) */}
+        {/* Active Metrics */}
         {activeMetrics.length > 0 && (
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white">Recent Data</h2>
@@ -270,7 +261,7 @@ export const BodyMeasurements: React.FC = () => {
           </div>
         )}
 
-        {/* No Data Available Section */}
+        {/* No Data */}
         <div className="space-y-2">
           <h2 className="text-lg font-bold text-white">No Data Available</h2>
           <div className="bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 divide-y divide-zinc-800">

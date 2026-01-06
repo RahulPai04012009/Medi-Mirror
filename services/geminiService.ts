@@ -250,3 +250,26 @@ export const estimateActivityCalories = async (activityName: string, durationMin
     return { calories: durationMinutes * 5, explanation: "Estimation based on average METs (Offline Fallback)." };
   }
 };
+
+/**
+ * Generates an insight/explanation for a specific health metric.
+ */
+export const getHealthInsight = async (metricName: string, recentValue: string, unit: string) => {
+  const ai = getAiClient();
+  const prompt = `
+    Provide a short, 2-sentence health insight for the metric: "${metricName}".
+    The user's recent value is: ${recentValue} ${unit}.
+    Explain if this is generally typical (assuming average adult) or what it indicates.
+    Keep it encouraging and medical but simple.
+  `;
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+    });
+    return response.text;
+  } catch (e) {
+    return `Tracking ${metricName} helps you understand your overall health trends.`;
+  }
+};

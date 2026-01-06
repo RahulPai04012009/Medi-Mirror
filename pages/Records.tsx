@@ -3,33 +3,34 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, Heart, Flame, Ruler, CircleDot, Ear, 
-  Pill, Brain, Move, Apple, Wind, Bed, 
+  Pill, Brain, Footprints, Apple, Wind, Moon, 
   ClipboardList, Activity, ChevronRight, User, 
-  Stethoscope, FileText, ArrowRight, LayoutGrid
+  LayoutGrid, Stethoscope
 } from 'lucide-react';
 
 interface CategoryItem {
   id: string;
   label: string;
   icon: React.ElementType;
-  color: string;
-  bgColor: string; // Tailwind class for background opacity
+  colorClass: string; // Text color
+  bgClass: string;    // Background color
 }
 
 const CATEGORIES: CategoryItem[] = [
-  { id: 'activity', label: 'Activity', icon: Flame, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-  { id: 'body', label: 'Body Measurements', icon: Ruler, color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
-  { id: 'cycle', label: 'Cycle Tracking', icon: CircleDot, color: 'text-pink-500', bgColor: 'bg-pink-500/10' },
-  { id: 'hearing', label: 'Hearing', icon: Ear, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
-  { id: 'heart', label: 'Heart', icon: Heart, color: 'text-red-500', bgColor: 'bg-red-500/10' },
-  { id: 'meds', label: 'Medications', icon: Pill, color: 'text-cyan-500', bgColor: 'bg-cyan-500/10' },
-  { id: 'mental', label: 'Mental Wellbeing', icon: Brain, color: 'text-teal-500', bgColor: 'bg-teal-500/10' },
-  { id: 'mobility', label: 'Mobility', icon: Move, color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
-  { id: 'nutrition', label: 'Nutrition', icon: Apple, color: 'text-green-500', bgColor: 'bg-green-500/10' },
-  { id: 'respiratory', label: 'Respiratory', icon: Wind, color: 'text-sky-500', bgColor: 'bg-sky-500/10' },
-  { id: 'sleep', label: 'Sleep', icon: Bed, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
-  { id: 'symptoms', label: 'Symptoms', icon: ClipboardList, color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
-  { id: 'vitals', label: 'Vitals', icon: Activity, color: 'text-rose-500', bgColor: 'bg-rose-500/10' },
+  { id: 'activity', label: 'Activity', icon: Flame, colorClass: 'text-orange-500', bgClass: 'bg-orange-500/15' },
+  { id: 'body', label: 'Body Measurements', icon: Ruler, colorClass: 'text-purple-500', bgClass: 'bg-purple-500/15' },
+  { id: 'cycle', label: 'Cycle Tracking', icon: CircleDot, colorClass: 'text-pink-500', bgClass: 'bg-pink-500/15' },
+  { id: 'hearing', label: 'Hearing', icon: Ear, colorClass: 'text-blue-500', bgClass: 'bg-blue-500/15' },
+  { id: 'heart', label: 'Heart', icon: Heart, colorClass: 'text-red-500', bgClass: 'bg-red-500/15' },
+  { id: 'meds', label: 'Medications', icon: Pill, colorClass: 'text-cyan-500', bgClass: 'bg-cyan-500/15' },
+  { id: 'mental', label: 'Mental Wellbeing', icon: Brain, colorClass: 'text-teal-500', bgClass: 'bg-teal-500/15' },
+  { id: 'mobility', label: 'Mobility', icon: Footprints, colorClass: 'text-amber-500', bgClass: 'bg-amber-500/15' },
+  { id: 'nutrition', label: 'Nutrition', icon: Apple, colorClass: 'text-green-500', bgClass: 'bg-green-500/15' },
+  { id: 'respiratory', label: 'Respiratory', icon: Wind, colorClass: 'text-sky-500', bgClass: 'bg-sky-500/15' },
+  { id: 'sleep', label: 'Sleep', icon: Moon, colorClass: 'text-indigo-500', bgClass: 'bg-indigo-500/15' },
+  { id: 'symptoms', label: 'Symptoms', icon: ClipboardList, colorClass: 'text-violet-500', bgClass: 'bg-violet-500/15' },
+  { id: 'vitals', label: 'Vitals', icon: Activity, colorClass: 'text-rose-500', bgClass: 'bg-rose-500/15' },
+  { id: 'other', label: 'Other Data', icon: LayoutGrid, colorClass: 'text-slate-500', bgClass: 'bg-slate-500/15' },
 ];
 
 export const Records: React.FC = () => {
@@ -41,111 +42,108 @@ export const Records: React.FC = () => {
   );
 
   const handleCategoryClick = (id: string) => {
-    if (id === 'activity') {
-      navigate('/activity');
-    } else if (id === 'body') {
-      navigate('/body-measurements');
+    switch (id) {
+      case 'activity': navigate('/activity'); break;
+      case 'body': navigate('/body-measurements'); break;
+      case 'mobility': navigate('/mobility'); break;
+      case 'respiratory': navigate('/respiratory'); break;
+      case 'sleep': navigate('/sleep'); break;
+      case 'vitals': navigate('/vitals'); break;
+      case 'mental': navigate('/mental'); break;
+      case 'other': navigate('/other'); break;
+      default: console.log("Category not implemented yet:", id);
     }
-    // Add logic for other categories if needed later
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-white pb-32 transition-colors">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-slate-50/80 dark:bg-black/80 backdrop-blur-xl px-6 pt-6 pb-2">
-        <div className="flex justify-between items-end mb-4">
+      <div className="sticky top-0 z-20 bg-slate-50/90 dark:bg-black/90 backdrop-blur-md px-6 pt-8 pb-4 border-b border-transparent dark:border-zinc-800 transition-colors">
+        <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-black tracking-tight">Browse</h1>
-          <div className="w-9 h-9 bg-slate-200 dark:bg-zinc-800 rounded-full flex items-center justify-center cursor-pointer hover:bg-slate-300 dark:hover:bg-zinc-700 transition-colors" onClick={() => navigate('/settings')}>
-             <User size={20} className="text-slate-500 dark:text-zinc-400" />
-          </div>
+          <button 
+            onClick={() => navigate('/settings')}
+            className="w-10 h-10 bg-slate-200 dark:bg-zinc-800 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:bg-zinc-700 transition-colors"
+          >
+             <User size={20} className="text-slate-600 dark:text-zinc-400" />
+          </button>
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-2">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
           <input 
             type="text" 
             placeholder="Search" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-200 dark:bg-zinc-900 rounded-xl py-2.5 pl-10 pr-4 text-sm font-bold placeholder:text-slate-500 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+            className="w-full bg-slate-200 dark:bg-zinc-900 rounded-xl py-3 pl-10 pr-4 text-sm font-bold placeholder:text-slate-500 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-slate-900 dark:text-white"
           />
         </div>
       </div>
 
-      <div className="px-6 space-y-8 mt-4">
+      <div className="px-6 space-y-6 mt-6">
         
-        {/* Top Actions (Favorites) */}
+        {/* Top Actions (Favorites) - Only show when not searching */}
         {!searchQuery && (
           <div className="space-y-4 animate-fade-in">
-             <div 
-               onClick={() => navigate('/home')}
-               className="bg-white dark:bg-zinc-900 rounded-2xl p-4 flex items-center justify-between active:scale-[0.98] transition-transform cursor-pointer"
-             >
-               <div className="flex items-center gap-3">
-                 <Heart className="text-blue-500 fill-blue-500" size={24} />
-                 <span className="font-bold text-lg">Summary</span>
-               </div>
-               <ChevronRight className="text-slate-300 dark:text-zinc-600" size={20} />
+             <div className="flex items-center justify-between px-1">
+                <h2 className="text-xl font-bold dark:text-zinc-100">Favorites</h2>
+                <button className="text-blue-500 text-xs font-bold uppercase tracking-wider">Edit</button>
              </div>
              
-             {/* Quick Links */}
              <div className="grid grid-cols-2 gap-3">
                 <button 
-                  onClick={() => navigate('/doctors')}
-                  className="bg-white dark:bg-zinc-900 p-4 rounded-2xl flex flex-col gap-2 items-start active:scale-[0.98] transition-transform"
+                  onClick={() => navigate('/home')}
+                  className="bg-white dark:bg-zinc-900 p-4 rounded-[20px] flex flex-col items-start gap-3 active:scale-[0.98] transition-all border border-slate-100 dark:border-zinc-800 shadow-sm hover:shadow-md"
                 >
-                  <Stethoscope className="text-blue-500" size={24} />
-                  <span className="font-bold text-sm">Providers</span>
+                  <div className="p-2.5 bg-red-500/15 rounded-full">
+                    <Heart className="text-red-500 fill-red-500" size={20} />
+                  </div>
+                  <span className="font-bold text-sm text-slate-900 dark:text-white">Summary</span>
                 </button>
                 <button 
-                  className="bg-white dark:bg-zinc-900 p-4 rounded-2xl flex flex-col gap-2 items-start active:scale-[0.98] transition-transform"
+                  onClick={() => navigate('/doctors')}
+                  className="bg-white dark:bg-zinc-900 p-4 rounded-[20px] flex flex-col items-start gap-3 active:scale-[0.98] transition-all border border-slate-100 dark:border-zinc-800 shadow-sm hover:shadow-md"
                 >
-                  <FileText className="text-purple-500" size={24} />
-                  <span className="font-bold text-sm">Documents</span>
+                  <div className="p-2.5 bg-blue-500/15 rounded-full">
+                    <Stethoscope className="text-blue-500" size={20} />
+                  </div>
+                  <span className="font-bold text-sm text-slate-900 dark:text-white">Providers</span>
                 </button>
              </div>
           </div>
         )}
 
         {/* Health Categories List */}
-        <div className="space-y-2 animate-slide-up">
-          <h2 className="text-xl font-bold dark:text-zinc-100">Health Categories</h2>
+        <div className="animate-slide-up">
+          <h2 className="text-xl font-bold dark:text-zinc-100 mb-3 px-1">Health Categories</h2>
           
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden divide-y divide-slate-100 dark:divide-zinc-800">
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] overflow-hidden divide-y divide-slate-100 dark:divide-zinc-800/50 border border-slate-100 dark:border-zinc-800 shadow-sm">
             {filteredCategories.length > 0 ? (
               filteredCategories.map((item) => (
                 <div 
                   key={item.id}
                   onClick={() => handleCategoryClick(item.id)}
-                  className="flex items-center gap-4 p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors active:bg-slate-100 dark:active:bg-zinc-800"
+                  className="flex items-center gap-4 p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors active:bg-slate-100 dark:active:bg-zinc-800 group"
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0`}>
-                     <item.icon className={item.color} size={24} />
+                  {/* Attractive Icon Container */}
+                  <div className={`w-10 h-10 rounded-full ${item.bgClass} flex items-center justify-center shrink-0 transition-transform group-hover:scale-110`}>
+                     <item.icon className={item.colorClass} size={20} />
                   </div>
-                  <div className="flex-1 font-semibold text-base tracking-wide text-slate-900 dark:text-white">
+                  
+                  <div className="flex-1 font-semibold text-base text-slate-900 dark:text-white tracking-tight">
                     {item.label}
                   </div>
-                  <ChevronRight className="text-slate-300 dark:text-zinc-600" size={20} />
+                  
+                  <ChevronRight className="text-slate-300 dark:text-zinc-600 group-hover:text-slate-400 dark:group-hover:text-zinc-500 transition-colors" size={20} />
                 </div>
               ))
             ) : (
-               <div className="p-8 text-center text-slate-400 dark:text-zinc-500 font-medium">
-                 No categories found
+               <div className="p-12 text-center">
+                 <Search className="w-12 h-12 text-slate-200 dark:text-zinc-700 mx-auto mb-3" />
+                 <p className="text-slate-400 dark:text-zinc-500 font-medium">No categories found</p>
                </div>
-            )}
-            
-            {/* "Other Data" at bottom if clearing search */}
-            {!searchQuery && (
-              <div className="flex items-center gap-4 p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors">
-                 <div className="w-8 h-8 flex items-center justify-center">
-                    <LayoutGrid className="text-blue-500" size={24} />
-                 </div>
-                 <div className="flex-1 font-semibold text-base tracking-wide text-slate-900 dark:text-white">
-                    Other Data
-                 </div>
-                 <ChevronRight className="text-slate-300 dark:text-zinc-600" size={20} />
-              </div>
             )}
           </div>
         </div>
