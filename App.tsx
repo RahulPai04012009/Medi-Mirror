@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, ErrorInfo, Component, ReactNode } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
+import Layout from './Layout';
 import { Splash, ProfileSetup } from './pages/Onboarding';
 import Home from './pages/Home';
 import { ToolWrapper, Chat } from './pages/HealthTools';

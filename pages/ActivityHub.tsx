@@ -89,7 +89,7 @@ export const ActivityHub: React.FC = () => {
         explanation: result?.explanation || "Estimated"
       };
       
-      setLogs(prev => [newLog, ...prev]);
+      setLogs(prev => [newLog, ...(prev || [])]);
       setShowLogModal(false);
       // Reset form
       setStartTime('');
@@ -103,7 +103,8 @@ export const ActivityHub: React.FC = () => {
 
   const getFilteredLogs = () => {
     if (!selectedActivity) return [];
-    return logs.filter(l => l.activityName === selectedActivity);
+    const safeLogs = Array.isArray(logs) ? logs : [];
+    return safeLogs.filter(l => l && l.activityName === selectedActivity);
   };
 
   // Prepare chart data for selected activity
@@ -119,9 +120,10 @@ export const ActivityHub: React.FC = () => {
   // Calculate Summary Data for "Move" Ring
   const todaysCalories = useMemo(() => {
     const todayStr = new Date().toISOString().split('T')[0];
-    return logs
-      .filter(l => l.date === todayStr)
-      .reduce((acc, curr) => acc + (curr.calories || 0), 0);
+    const safeLogs = Array.isArray(logs) ? logs : [];
+    return safeLogs
+      .filter(l => l?.date === todayStr)
+      .reduce((acc, curr) => acc + (curr?.calories || 0), 0);
   }, [logs]);
 
   const CALORIE_GOAL = 600;
