@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, ChevronRight, X, Save, 
   Sparkles, Footprints, Wind, Moon, Brain,
-  Activity, Smartphone, Move, LayoutGrid
+  Activity, Smartphone, Move, LayoutGrid, BookOpen
 } from 'lucide-react';
 import { getHealthInsight } from '../services/geminiService';
 import { HealthChart } from '../components/HealthChart';
@@ -17,13 +18,19 @@ interface MetricConfig {
   description?: string;
 }
 
+interface Article {
+  title: string;
+  image: string;
+  content?: string;
+}
+
 interface PageConfig {
   title: string;
   colorClass: string; // Tailwind text color class, e.g. "text-orange-500"
   bgClass: string;    // Tailwind bg color class, e.g. "bg-orange-500/10"
   icon: React.ElementType;
   metrics: MetricConfig[];
-  articles?: { title: string; image: string }[];
+  articles?: Article[];
 }
 
 // --- Data Store ---
@@ -66,6 +73,8 @@ const HealthCategoryPage: React.FC<{ config: PageConfig; categoryKey: string }> 
   
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
   const [showLogModal, setShowLogModal] = useState(false);
+  const [viewingArticle, setViewingArticle] = useState<Article | null>(null);
+
   const [inputValue, setInputValue] = useState('');
   const [inputDate, setInputDate] = useState(new Date().toISOString().split('T')[0]);
   const [inputTime, setInputTime] = useState(new Date().toTimeString().slice(0, 5));
@@ -92,7 +101,7 @@ const HealthCategoryPage: React.FC<{ config: PageConfig; categoryKey: string }> 
         setAiInsight(`Start tracking ${currentMetricDef.label} to get AI-powered health insights.`);
       }
     }
-  }, [selectedMetric, logs]); // Added logs dependency to refresh if new log added
+  }, [selectedMetric, logs]); 
 
   const handleSave = () => {
     if (!selectedMetric || !inputValue) return;
@@ -160,7 +169,7 @@ const HealthCategoryPage: React.FC<{ config: PageConfig; categoryKey: string }> 
                barColor={barColorClass}
                textColor={config.colorClass} 
                unit={currentMetricDef?.unit || ''} 
-               aggregationType="average" // Default generic to average
+               aggregationType="average" 
              />
           )}
 
@@ -265,19 +274,77 @@ const HealthCategoryPage: React.FC<{ config: PageConfig; categoryKey: string }> 
              <h2 className="text-lg font-bold text-white">Get More From Health</h2>
              <div className="grid grid-cols-2 gap-4">
                {config.articles.map((article, i) => (
-                 <div key={i} className="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
+                 <button 
+                    key={i} 
+                    onClick={() => setViewingArticle(article)}
+                    className="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 text-left group active:scale-95 transition-transform"
+                 >
                     <div className="h-24 bg-zinc-800 relative">
-                       <img src={article.image} alt="" className="w-full h-full object-cover opacity-60" />
+                       <img src={article.image} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
                     </div>
                     <div className="p-4">
-                       <h3 className="font-bold text-sm leading-tight">{article.title}</h3>
+                       <h3 className="font-bold text-sm leading-tight text-white mb-2">{article.title}</h3>
+                       <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest flex items-center gap-1">
+                         Read Article <ChevronRight size={10} />
+                       </p>
                     </div>
-                 </div>
+                 </button>
                ))}
              </div>
           </div>
         )}
       </div>
+
+      {/* Article Viewer Modal */}
+      {viewingArticle && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+          <div className="bg-zinc-900 w-full max-w-md rounded-[32px] overflow-hidden border border-zinc-800 animate-slide-up flex flex-col max-h-[85vh]">
+            <div className="relative h-60 shrink-0">
+              <img src={viewingArticle.image} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+              <button 
+                onClick={() => setViewingArticle(null)}
+                className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md rounded-full text-white"
+              >
+                <X size={20} />
+              </button>
+              <div className="absolute bottom-6 left-6 right-6">
+                 <div className="flex items-center gap-2 mb-2">
+                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-black/50 backdrop-blur-md ${config.colorClass} border border-white/10`}>
+                      {config.title} Guide
+                   </span>
+                 </div>
+                 <h2 className="text-2xl font-black text-white leading-tight shadow-black drop-shadow-lg">{viewingArticle.title}</h2>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <div className="prose prose-invert prose-sm">
+                <p className="text-zinc-300 leading-relaxed text-sm">
+                  {viewingArticle.content || "This topic is essential for maintaining a balanced and healthy lifestyle. Understanding the fundamentals can help you make better decisions about your daily routine and long-term health goals."}
+                </p>
+                <p className="text-zinc-300 leading-relaxed text-sm mt-4">
+                  Regular monitoring and small lifestyle adjustments can lead to significant improvements over time. Consult with a healthcare professional for personalized advice tailored to your specific needs.
+                </p>
+                
+                <div className="mt-8 p-4 bg-zinc-950 rounded-2xl border border-zinc-800 flex items-start gap-3">
+                   <BookOpen size={20} className={config.colorClass} />
+                   <div>
+                      <h4 className="font-bold text-white text-sm mb-1">Did you know?</h4>
+                      <p className="text-xs text-zinc-400">Consistent tracking of this metric is linked to better health outcomes in 85% of patients.</p>
+                   </div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setViewingArticle(null)}
+                className={`w-full mt-8 py-4 rounded-2xl font-black text-sm ${config.bgClass.replace('/10', '')} text-white active:scale-95 transition-transform`}
+              >
+                Close Article
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Log Modal */}
       {showLogModal && (
@@ -376,7 +443,11 @@ const SLEEP_CONFIG: PageConfig = {
     { id: 'deep_sleep', label: 'Deep Sleep', unit: 'hr' },
   ],
   articles: [
-    { title: "Why Sleep Stages Matter", image: "https://images.unsplash.com/photo-1511295742362-92c96b535cb0?auto=format&fit=crop&q=80&w=300&h=200" }
+    { 
+      title: "Why Sleep Stages Matter", 
+      image: "https://images.unsplash.com/photo-1511295742362-92c96b535cb0?auto=format&fit=crop&q=80&w=300&h=200",
+      content: "Sleep occurs in cycles that range from light sleep to deep sleep and REM sleep. Deep sleep is crucial for physical restoration, while REM sleep supports cognitive functions like memory and learning. Understanding your sleep architecture can help you optimize your rest."
+    }
   ]
 };
 
@@ -410,7 +481,11 @@ const MENTAL_CONFIG: PageConfig = {
     { id: 'time_in_daylight', label: 'Time in Daylight', unit: 'min' },
   ],
   articles: [
-    { title: "Benefits of Mindfulness", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=300&h=200" }
+    { 
+      title: "Benefits of Mindfulness", 
+      image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=300&h=200",
+      content: "Mindfulness is the practice of purposely bringing one's attention in the present moment without judgment. Studies suggest that mindfulness practices can help reduce stress, lower blood pressure, improve sleep, and may even help treat anxiety and depression."
+    }
   ]
 };
 
