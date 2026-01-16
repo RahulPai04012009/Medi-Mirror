@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronRight, ArrowLeft, Flame, Clock, 
-  Plus, Sparkles, X, Check
+  Plus, Sparkles, X, Check, Calendar, Timer, Zap
 } from 'lucide-react';
 import { estimateActivityCalories } from '../services/geminiService';
 import { HealthChart } from '../components/HealthChart';
@@ -30,6 +30,7 @@ interface ActivityLog {
   date: string; // YYYY-MM-DD
   duration: number; // minutes
   calories: number;
+  intensity?: string;
   explanation?: string;
 }
 
@@ -49,7 +50,7 @@ export const ActivityHub: React.FC = () => {
 
   // Logs Data with safe initialization
   const [logs, setLogs] = useState<ActivityLog[]>([
-    { id: '1', activityName: 'Cycling Distance', date: new Date().toISOString().split('T')[0], startTime: '07:30', endTime: '08:15', duration: 45, calories: 380, explanation: 'Based on moderate cycling (~8 METs)' }
+    { id: '1', activityName: 'Cycling Distance', date: new Date().toISOString().split('T')[0], startTime: '07:30', endTime: '08:15', duration: 45, calories: 380, intensity: 'Moderate', explanation: 'Based on moderate cycling (~8 METs)' }
   ]);
 
   const handleBack = () => {
@@ -86,6 +87,7 @@ export const ActivityHub: React.FC = () => {
         endTime,
         duration,
         calories: Math.round(result?.calories || 0), // Safety check
+        intensity: intensity,
         explanation: result?.explanation || "Estimated"
       };
       
@@ -190,21 +192,48 @@ export const ActivityHub: React.FC = () => {
 
           {/* History / Logs */}
           <div className="space-y-4 pt-4">
-             <h3 className="text-lg font-bold">History</h3>
+             <h3 className="text-lg font-bold flex items-center gap-2">
+               History <span className="text-xs font-normal text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full">{activityLogs.length} entries</span>
+             </h3>
              {activityLogs.length > 0 ? (
                <div className="space-y-3">
                  {activityLogs.map(log => (
-                   <div key={log.id} className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
-                      <div>
-                         <div className="flex items-center gap-2 text-sm font-bold text-white mb-1">
-                            <Clock size={14} className="text-orange-500" />
-                            {new Date(log.date).toLocaleDateString(undefined, {month:'short', day:'numeric'})} • {log.startTime}
+                   <div key={log.id} className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-start gap-4">
+                      <div className="flex-1 space-y-2">
+                         <div className="flex items-center gap-2 text-sm font-bold text-white">
+                            <Calendar size={14} className="text-orange-500" />
+                            {new Date(log.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}
+                            <span className="text-zinc-600">at</span> {log.startTime}
                          </div>
-                         <p className="text-xs text-zinc-500">{log.explanation || `${log.duration} min duration`}</p>
+                         
+                         <div className="flex flex-wrap gap-2">
+                            <div className="flex items-center gap-1.5 bg-zinc-800/50 px-2.5 py-1 rounded-lg border border-zinc-800">
+                               <Timer size={12} className="text-zinc-400" />
+                               <span className="text-xs font-medium text-zinc-300">{log.duration} min</span>
+                            </div>
+                            {log.intensity && (
+                              <div className="flex items-center gap-1.5 bg-zinc-800/50 px-2.5 py-1 rounded-lg border border-zinc-800">
+                                 <Zap size={12} className="text-zinc-400" />
+                                 <span className="text-xs font-medium text-zinc-300">{log.intensity}</span>
+                              </div>
+                            )}
+                         </div>
+                         
+                         {log.explanation && (
+                           <p className="text-[10px] text-zinc-500 font-medium leading-relaxed border-l-2 border-zinc-800 pl-2">
+                             {log.explanation}
+                           </p>
+                         )}
                       </div>
-                      <div className="text-right">
-                         <span className="block text-lg font-black text-orange-500">{log.calories}</span>
-                         <span className="text-[10px] text-zinc-500 uppercase font-bold">kcal</span>
+                      
+                      <div className="text-right flex flex-col items-end">
+                         <div className="flex items-baseline gap-1">
+                            <span className="text-xl font-black text-orange-500">{log.calories}</span>
+                            <span className="text-[10px] text-zinc-500 uppercase font-bold">kcal</span>
+                         </div>
+                         <div className="mt-1">
+                            <Flame size={16} className="text-orange-500/20 fill-orange-500" />
+                         </div>
                       </div>
                    </div>
                  ))}

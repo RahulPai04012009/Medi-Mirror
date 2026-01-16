@@ -1,5 +1,4 @@
 
-
 export interface UserProfile {
   name: string;
   email: string;
@@ -18,6 +17,11 @@ export interface UserProfile {
     phone: string;
     relation: string;
   };
+  settings?: {
+    contextAware: boolean;
+    cloudSync: boolean;
+    notifications: boolean;
+  };
 }
 
 export enum AppRoute {
@@ -27,6 +31,7 @@ export enum AppRoute {
   HOME = 'home',
   SYMPTOM_CHECKER = 'symptom_checker',
   WOUND_SCANNER = 'wound_scanner',
+  MIRROR_CHECK = 'mirror_check',
   DOCTORS = 'doctors',
   RECORDS = 'records',
   EMERGENCY = 'emergency',
@@ -109,6 +114,15 @@ export interface WoundAnalysis {
   healingStage: string;
   urgentCareNeeded: boolean;
   advice: string;
+}
+
+export interface MoodAnalysis {
+  fatigueLevel: 'Low' | 'Medium' | 'High';
+  stressLevel: 'Low' | 'Medium' | 'High';
+  mood: string;
+  wellnessScore: number; // 1-10
+  insight: string;
+  physicalSigns: string[]; // e.g. "Dark circles", "Pale skin"
 }
 
 export interface ChatMessage {

@@ -6,7 +6,7 @@ import {
   Droplets, Footprints, Heart, CheckCircle2, 
   Sparkles, RefreshCw, X, Clock, Play, Trophy, Quote,
   Music, Wind, Volume2, CloudRain, Moon, Trees, Sun, Plus, 
-  GlassWater, User as UserIcon, Flame, Bell, Camera, Power, Zap, Eye, EyeOff, Signal
+  GlassWater, User as UserIcon, Flame, Bell, Camera, Power, Zap, Eye, EyeOff, Signal, Smile
 } from 'lucide-react';
 import { UserProfile } from '../types';
 
@@ -135,343 +135,38 @@ const WaterCard = ({ intake, goal, onAdd }: { intake: number, goal: number, onAd
   );
 };
 
-// --- REAL PPG HEART RATE COMPONENT (MEDICAL GRADE LOGIC) ---
+// --- Heart Rate Card (Dashboard Link) ---
 const HeartRateCard = () => {
-   const [bpm, setBpm] = useState<number | null>(null);
-   const [isScanning, setIsScanning] = useState(false);
-   const [message, setMessage] = useState('Resting Rate');
-   const [rawGraphData, setRawGraphData] = useState<number[]>(new Array(60).fill(0));
-   const [signalQuality, setSignalQuality] = useState(0); // 0-100%
-   const [showCamera, setShowCamera] = useState(false);
-   
-   const videoRef = useRef<HTMLVideoElement>(null);
-   const canvasRef = useRef<HTMLCanvasElement>(null);
-   const streamRef = useRef<MediaStream | null>(null);
-   const frameIdRef = useRef<number>(0);
-   
-   // DSP State
-   const dspRef = useRef<{
-       timestamps: number[];
-       values: number[];
-       beats: number[];
-       lastBeatTime: number;
-       validFingerFrames: number;
-   }>({ 
-       timestamps: [], 
-       values: [], 
-       beats: [], 
-       lastBeatTime: 0,
-       validFingerFrames: 0
-   });
-
-   const stopScan = () => {
-       if (streamRef.current) {
-           streamRef.current.getTracks().forEach(t => t.stop());
-           streamRef.current = null;
-       }
-       if (frameIdRef.current) {
-           cancelAnimationFrame(frameIdRef.current);
-       }
-       setIsScanning(false);
-       setMessage('Resting Rate');
-       setRawGraphData(new Array(60).fill(0));
-       setSignalQuality(0);
-   };
-
-   const startScan = async () => {
-       try {
-           setIsScanning(true);
-           setBpm(null);
-           setMessage('Starting Camera...');
-           
-           const stream = await navigator.mediaDevices.getUserMedia({
-               video: { 
-                 facingMode: 'environment', 
-                 width: { ideal: 192 }, // Low res is fine for PPG and faster
-                 height: { ideal: 144 },
-                 frameRate: { ideal: 30 }
-               }
-           });
-           streamRef.current = stream;
-           
-           if (videoRef.current) {
-               videoRef.current.srcObject = stream;
-               videoRef.current.play();
-           }
-
-           // Flash handling
-           const track = stream.getVideoTracks()[0];
-           const capabilities = track.getCapabilities();
-           
-           setMessage('Activating Sensor...');
-           // @ts-ignore
-           if (capabilities.torch) {
-               // @ts-ignore
-               await track.applyConstraints({ advanced: [{ torch: true }] });
-           } else {
-               setMessage('Flash required. Please use bright light.');
-           }
-
-           // Reset DSP Buffer
-           dspRef.current = { 
-               timestamps: [], 
-               values: [], 
-               beats: [], 
-               lastBeatTime: 0,
-               validFingerFrames: 0
-           };
-
-           setTimeout(() => {
-              if (isScanning) setMessage('Place finger on Camera & Flash');
-              processFrame();
-           }, 1000); 
-
-       } catch (err) {
-           console.error("Camera error:", err);
-           setIsScanning(false);
-           alert("Camera access denied. This feature needs camera permission to see blood flow.");
-       }
-   };
-
-   const processFrame = () => {
-       if (!videoRef.current || !canvasRef.current || !isScanning) return;
-       
-       const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true });
-       if (!ctx) return;
-
-       // Draw only the center crop (ROI) to avoid edge noise
-       const vid = videoRef.current;
-       const roiSize = 40;
-       const sx = (vid.videoWidth - roiSize) / 2;
-       const sy = (vid.videoHeight - roiSize) / 2;
-       
-       ctx.drawImage(vid, sx, sy, roiSize, roiSize, 0, 0, 30, 30);
-       const frame = ctx.getImageData(0, 0, 30, 30);
-       const data = frame.data;
-       
-       let rSum = 0, gSum = 0, bSum = 0;
-       const pixelCount = data.length / 4;
-
-       // 1. Calculate Average Colors
-       for (let i = 0; i < data.length; i += 4) {
-           rSum += data[i];
-           gSum += data[i + 1];
-           bSum += data[i + 2];
-       }
-       const r = rSum / pixelCount;
-       const g = gSum / pixelCount;
-       const b = bSum / pixelCount;
-
-       // 2. Strict Finger Validation
-       // Real finger covering flash: High Red, Low Green/Blue.
-       // Thresholds: Red > 60 (some light), Green < Red * 0.5 (blood absorbs green)
-       const isFinger = r > 60 && g < (r * 0.6) && b < (r * 0.6);
-
-       if (!isFinger) {
-           dspRef.current.validFingerFrames = 0;
-           setSignalQuality(0);
-           setBpm(null);
-           setMessage('No finger detected. Cover Camera.');
-           
-           // Show flatline if no finger
-           setRawGraphData(prev => [...prev.slice(1), 128]); // 128 is mid-gray
-           frameIdRef.current = requestAnimationFrame(processFrame);
-           return;
-       }
-
-       // Finger is present, warm up quality metric
-       dspRef.current.validFingerFrames++;
-       const qualityPercent = Math.min(100, dspRef.current.validFingerFrames * 2); // Takes 50 frames (~1.5s) to reach 100% confidence
-       setSignalQuality(qualityPercent);
-       if (qualityPercent < 50) setMessage('Calibrating...');
-       else setMessage('Detecting Pulse...');
-
-       // 3. Signal Processing (AC Component Isolation)
-       const now = performance.now();
-       const state = dspRef.current;
-       
-       // Raw signal is Red intensity. Ideally we invert it because more blood = darker image = lower Red.
-       // But keeping it positive is easier for "peaks". Let's stick to Average Red.
-       // Note: During systole (beat), blood rushes in -> absorbs light -> Red value DROPS.
-       // So a "beat" is a valley in Red brightness.
-       
-       const rawVal = r;
-       state.values.push(rawVal);
-       state.timestamps.push(now);
-       
-       // Keep buffer manageable (approx 5 seconds at 30fps = 150 frames)
-       if (state.values.length > 150) {
-           state.values.shift();
-           state.timestamps.shift();
-       }
-
-       // We need enough data to filter
-       if (state.values.length > 15) {
-           // Simple Rolling Average Filter to remove DC component (breath/movement)
-           const windowSize = 15;
-           const currentVal = state.values[state.values.length - 1];
-           
-           // Calculate local mean
-           let sum = 0;
-           for(let i = 1; i <= windowSize; i++) {
-               sum += state.values[state.values.length - i];
-           }
-           const localMean = sum / windowSize;
-           
-           // The "Pulse" is the deviation from the mean.
-           // Invert so beat (drop in brightness) becomes a positive peak.
-           const filtered = (localMean - currentVal) * 5; // Gain of 5 for visibility
-
-           // Update Graph
-           setRawGraphData(prev => {
-               // Normalize for display: centered at 50, range 0-100
-               const plotVal = 50 + filtered; 
-               const newData = [...prev.slice(1), plotVal];
-               return newData;
-           });
-
-           // 4. Zero-Crossing / Peak Detection
-           // Look for upward crossing of a threshold
-           const THRESHOLD = 2; // Signal must rise above this to be a beat
-           const MIN_BEAT_INTERVAL = 300; // 200 BPM max
-           const MAX_BEAT_INTERVAL = 1500; // 40 BPM min
-
-           if (filtered > THRESHOLD && (now - state.lastBeatTime) > MIN_BEAT_INTERVAL) {
-               // We found a potential peak.
-               // Check if previous point was lower (rising edge)
-               // Simple logic: Trigger on rising edge crossing threshold
-               
-               if (state.lastBeatTime !== 0) {
-                   const interval = now - state.lastBeatTime;
-                   if (interval < MAX_BEAT_INTERVAL) {
-                       const instantBpm = 60000 / interval;
-                       state.beats.push(instantBpm);
-                       if (state.beats.length > 5) state.beats.shift();
-
-                       // Average the last 5 beats for stability
-                       const avgBpm = Math.round(state.beats.reduce((a, b) => a + b, 0) / state.beats.length);
-                       
-                       if (qualityPercent > 80) { // Only show BPM if signal is good
-                           setBpm(avgBpm);
-                       }
-                   }
-               }
-               state.lastBeatTime = now;
-           }
-       }
-
-       frameIdRef.current = requestAnimationFrame(processFrame);
-   };
-
-   // SVG Path for Oscilloscope
-   const renderGraph = () => {
-       const points = rawGraphData.map((val, i) => {
-           // Map 0-100 range to Y coordinates (height is 48px)
-           // Invert Y because SVG 0 is top
-           const y = 48 - (Math.max(0, Math.min(100, val)) / 100 * 48);
-           const x = (i / (rawGraphData.length - 1)) * 100; // percentage width
-           return `${x},${y}`;
-       }).join(' ');
-
-       return (
-           <svg viewBox="0 0 100 48" className="w-full h-12 overflow-visible" preserveAspectRatio="none">
-               <polyline 
-                   points={points} 
-                   fill="none" 
-                   stroke="#ef4444" 
-                   strokeWidth="2" 
-                   vectorEffect="non-scaling-stroke"
-                   strokeLinecap="round"
-                   strokeLinejoin="round"
-               />
-           </svg>
-       );
-   }
-
+    const navigate = useNavigate();
    return (
-    <div className="bg-white dark:bg-slate-900 rounded-[32px] p-5 shadow-sm border border-slate-100 dark:border-slate-800 relative overflow-hidden h-48 group hover:shadow-lg transition-all">
-       <canvas ref={canvasRef} width="30" height="30" className="hidden"></canvas>
-
+    <div onClick={() => navigate('/check?mode=vitals')} className="bg-white dark:bg-slate-900 rounded-[32px] p-5 shadow-sm border border-slate-100 dark:border-slate-800 relative overflow-hidden h-48 group hover:shadow-lg transition-all cursor-pointer">
+       
        <div className="flex justify-between items-start relative z-20">
          <div className="p-2.5 bg-red-50 dark:bg-red-900/20 rounded-full text-red-500 animate-pulse">
             <Activity size={20} />
          </div>
-         {isScanning ? (
-             <div className="flex gap-2">
-                 <button onClick={() => setShowCamera(!showCamera)} className="bg-slate-100 dark:bg-slate-800 p-2 rounded-full text-slate-500">
-                     {showCamera ? <EyeOff size={14} /> : <Eye size={14} />}
-                 </button>
-                 <button onClick={stopScan} className="bg-slate-100 dark:bg-slate-800 p-2 rounded-full text-red-500">
-                     <Power size={14} />
-                 </button>
-             </div>
-         ) : (
-             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">PPG Sensor</span>
-         )}
+         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Vitals Scan</span>
        </div>
 
-       {isScanning ? (
-           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pt-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
+       <div className="absolute top-1/2 left-0 w-[200%] -translate-y-1/2 h-20 opacity-20 dark:opacity-30 pointer-events-none flex">
+            <div className="w-1/2 h-full animate-ecg-scroll flex-shrink-0">
+                <svg viewBox="0 0 500 100" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                    <path d="M0,50 L50,50 L60,20 L70,80 L80,50 L150,50 L160,20 L170,80 L180,50 L250,50 L260,20 L270,80 L280,50 L350,50 L360,20 L370,80 L380,50 L500,50" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            </div>
+       </div>
                 
-                {/* Proof of Life Camera Feed */}
-                <div className={`absolute inset-0 z-[-1] transition-opacity duration-500 ${showCamera ? 'opacity-100' : 'opacity-0'}`}>
-                    <video ref={videoRef} className="w-full h-full object-cover grayscale opacity-50" playsInline muted></video>
-                </div>
-
-                <div className="w-full px-6 mb-2 relative h-12 flex items-center">
-                    {renderGraph()}
-                    {/* Baseline */}
-                    <div className="absolute w-full border-b border-dashed border-red-200 dark:border-red-900/30 top-1/2"></div>
-                </div>
-                
-                <div className="flex items-baseline gap-1 relative z-20">
-                    <span className="text-4xl font-black text-slate-900 dark:text-white tabular-nums">
-                        {bpm ? bpm : '--'}
-                    </span>
-                    <span className="text-sm font-bold text-red-500">BPM</span>
-                </div>
-                
-                <div className="w-full px-10 mt-2">
-                    <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                        <span>Signal Quality</span>
-                        <span>{signalQuality}%</span>
-                    </div>
-                    <div className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div 
-                            className={`h-full transition-all duration-300 ${signalQuality > 80 ? 'bg-green-500' : signalQuality > 40 ? 'bg-orange-500' : 'bg-red-500'}`} 
-                            style={{ width: `${signalQuality}%` }}
-                        ></div>
-                    </div>
-                </div>
-                
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest animate-pulse relative z-20">
-                    {message}
-                </p>
-           </div>
-       ) : (
-           <>
-                <div className="absolute top-1/2 left-0 w-[200%] -translate-y-1/2 h-20 opacity-20 dark:opacity-30 pointer-events-none flex">
-                    <div className="w-1/2 h-full animate-ecg-scroll flex-shrink-0">
-                        <svg viewBox="0 0 500 100" className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                            <path d="M0,50 L50,50 L60,20 L70,80 L80,50 L150,50 L160,20 L170,80 L180,50 L250,50 L260,20 L270,80 L280,50 L350,50 L360,20 L370,80 L380,50 L500,50" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
-                </div>
-                
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pt-4">
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-black text-slate-900 dark:text-white">{bpm || '--'}</span>
-                        <span className="text-sm font-bold text-red-500">BPM</span>
-                    </div>
-                    <button 
-                        onClick={startScan}
-                        className="mt-3 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg shadow-red-500/30 flex items-center gap-2 transition-all active:scale-95"
-                    >
-                        <Camera size={12} /> Start Measurement
-                    </button>
-                </div>
-           </>
-       )}
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pt-4">
+            <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black text-slate-900 dark:text-white">Start</span>
+            </div>
+            <div 
+                className="mt-3 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg shadow-red-500/30 flex items-center gap-2 transition-all active:scale-95"
+            >
+                <Camera size={12} /> Measure
+            </div>
+            <p className="absolute bottom-5 text-[9px] font-bold text-slate-400">Heart • Breath • Stress</p>
+        </div>
 
        <style>{`
          @keyframes ecg-scroll {
@@ -664,13 +359,13 @@ const Home: React.FC<HomeProps> = ({ user, isDarkMode, toggleTheme }) => {
 
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-2 gap-3">
-           <button onClick={() => navigate('/check?mode=wound')} className="bg-purple-50 dark:bg-purple-900/10 p-5 rounded-[28px] border border-purple-100 dark:border-purple-900/30 flex flex-col items-center gap-2 text-center group hover:bg-purple-100 dark:hover:bg-purple-900/20 transition-colors">
+           <button onClick={() => navigate('/check?mode=mirror')} className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-5 rounded-[28px] border border-indigo-100 dark:border-indigo-900/30 flex flex-col items-center gap-2 text-center group hover:bg-white dark:hover:bg-indigo-900/30 transition-colors shadow-sm">
               <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-purple-500 shadow-sm group-hover:scale-110 transition-transform">
-                 <Search size={22} />
+                 <Smile size={22} />
               </div>
               <div>
-                 <p className="font-bold text-slate-900 dark:text-white text-sm">Scan Wound</p>
-                 <p className="text-[10px] text-slate-500 font-medium">Instant Analysis</p>
+                 <p className="font-bold text-slate-900 dark:text-white text-sm">Mirror Check</p>
+                 <p className="text-[10px] text-slate-500 font-medium">Daily Mood Scan</p>
               </div>
            </button>
            <button onClick={() => navigate('/doctors')} className="bg-teal-50 dark:bg-teal-900/10 p-5 rounded-[28px] border border-teal-100 dark:border-teal-900/30 flex flex-col items-center gap-2 text-center group hover:bg-teal-100 dark:hover:bg-teal-900/20 transition-colors">

@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Phone, Share2, Shield, Bell, RefreshCcw, ChevronRight, 
-  User, Watch, Bluetooth, Smartphone, X, CheckCircle, ArrowLeft, Save
+  User, Watch, Bluetooth, Smartphone, X, CheckCircle, ArrowLeft, Save,
+  Cloud, Brain, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { UserProfile } from '../types';
 
@@ -194,6 +194,22 @@ export const SettingsPage: React.FC<{ user: UserProfile, onUpdateUser: (u: UserP
   const [pairingStep, setPairingStep] = useState(1);
   const isWatchConnected = localStorage.getItem('medimirror_watch_connected') === 'true';
 
+  // New Toggle States
+  const [contextAware, setContextAware] = useState(localStorage.getItem('medimirror_context') === 'true');
+  const [cloudSync, setCloudSync] = useState(localStorage.getItem('medimirror_sync') === 'true');
+
+  const toggleContext = () => {
+     const newVal = !contextAware;
+     setContextAware(newVal);
+     localStorage.setItem('medimirror_context', String(newVal));
+  };
+
+  const toggleSync = () => {
+     const newVal = !cloudSync;
+     setCloudSync(newVal);
+     localStorage.setItem('medimirror_sync', String(newVal));
+  };
+
   const handleReset = () => {
     if (window.confirm("This will clear all your data. Are you sure?")) {
       localStorage.clear();
@@ -233,20 +249,33 @@ export const SettingsPage: React.FC<{ user: UserProfile, onUpdateUser: (u: UserP
             <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
          </div>
          
-         {[
-           { icon: Shield, label: 'Privacy & Security' },
-           { icon: Bell, label: 'Notifications' },
-         ].map((item, i) => (
-           <div key={i} className="flex items-center justify-between p-4 border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
-                  <item.icon size={20} />
+         {/* Context Awareness Toggle */}
+         <div onClick={toggleContext} className="flex items-center justify-between p-4 border-b border-slate-50 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+             <div className="flex items-center gap-4">
+                <div className="p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
+                   <Brain size={20} />
                 </div>
-                <span className="font-medium text-slate-700 dark:text-slate-200">{item.label}</span>
-              </div>
-              <ChevronRight size={18} className="text-slate-300 dark:text-slate-600" />
-           </div>
-         ))}
+                <div>
+                  <p className="font-medium text-slate-700 dark:text-slate-200">Context Aware AI</p>
+                  <p className="text-[10px] text-slate-400">Use health history for better diagnosis</p>
+                </div>
+             </div>
+             {contextAware ? <ToggleRight size={28} className="text-purple-600" /> : <ToggleLeft size={28} className="text-slate-300" />}
+         </div>
+
+         {/* Cloud Sync Toggle */}
+         <div onClick={toggleSync} className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+             <div className="flex items-center gap-4">
+                <div className="p-2 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 rounded-lg">
+                   <Cloud size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-700 dark:text-slate-200">Cloud Sync (Sim)</p>
+                  <p className="text-[10px] text-slate-400">{cloudSync ? `Synced: ${new Date().toLocaleTimeString()}` : 'Data is stored locally'}</p>
+                </div>
+             </div>
+             {cloudSync ? <ToggleRight size={28} className="text-teal-600" /> : <ToggleLeft size={28} className="text-slate-300" />}
+         </div>
       </div>
 
       {/* Devices & Wearables */}

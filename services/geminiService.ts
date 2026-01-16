@@ -12,6 +12,19 @@ const getAiClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
+// --- EMERGENCY SAFETY PROTOCOL ---
+export const EMERGENCY_KEYWORDS = [
+  "chest pain", "heart attack", "can't breathe", "difficulty breathing",
+  "suicide", "kill myself", "want to die", "crushing pain", 
+  "left arm pain", "stroke", "face drooping", "slurred speech",
+  "severe bleeding", "unconscious"
+];
+
+export const checkEmergencyKeywords = (text: string): boolean => {
+  const lower = text.toLowerCase();
+  return EMERGENCY_KEYWORDS.some(k => lower.includes(k));
+};
+
 /**
  * Enhanced search for nearby places with reasoning for doctors/medicines.
  */
@@ -137,11 +150,13 @@ export const mapSearchWithContext = async (
 export const analyzeSymptoms = async (symptoms: string) => {
   const ai = getAiClient();
   const prompt = `Analyze: "${symptoms}". Provide a JSON response with:
-  1. A list of potential conditions.
+  1. A list of potential conditions (be conservative, prioritize safety).
   2. A brief, simple explanation of what the primary condition is.
-  3. A treatment/care plan (home remedies).
+  3. A treatment/care plan (home remedies for minor issues, doctor referral for serious ones).
   4. A list of 2-3 generic over-the-counter medicines (strictly OTC, add disclaimer).
-  5. The type of specialist doctor to see (e.g., 'Cardiologist', 'Dermatologist', 'General Physician').`;
+  5. The type of specialist doctor to see.
+  6. 'seeDoctor': boolean. Set to true for severe/persistent symptoms.
+  7. 'recommendation': One sentence summary of action.`;
   
   try {
     // Using gemini-3-flash-preview for basic text tasks with structured JSON output.
@@ -198,6 +213,52 @@ export const analyzeWound = async (base64Image: string) => {
   } catch (e) { throw e; }
 };
 
+export const analyzeMood = async (base64Image: string) => {
+  const ai = getAiClient();
+  const base64Data = base64Image.split(',')[1] || base64Image;
+  try {
+    const prompt = `Analyze this selfie for general health and wellness indicators (non-diagnostic).
+    Look for:
+    - Fatigue (bags under eyes, drooping eyelids)
+    - Stress (tension in jaw, forehead)
+    - General Mood (smile, neutral, frown)
+    - Physical Signs (pallor, flushing, dry skin)
+    
+    Return JSON with:
+    - fatigueLevel (Low/Medium/High)
+    - stressLevel (Low/Medium/High)
+    - mood (string)
+    - wellnessScore (1-10 integer)
+    - insight (Short encouraging sentence)
+    - physicalSigns (Array of strings)`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: { 
+        parts: [
+          { inlineData: { mimeType: "image/jpeg", data: base64Data } }, 
+          { text: prompt }
+        ] 
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            fatigueLevel: { type: Type.STRING },
+            stressLevel: { type: Type.STRING },
+            mood: { type: Type.STRING },
+            wellnessScore: { type: Type.INTEGER },
+            insight: { type: Type.STRING },
+            physicalSigns: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
+        }
+      }
+    });
+    return JSON.parse(response.text || "{}");
+  } catch (e) { throw e; }
+};
+
 export const chatWithMedi = async (history: any[], newMessage: string) => {
   const ai = getAiClient();
   try {
@@ -205,7 +266,7 @@ export const chatWithMedi = async (history: any[], newMessage: string) => {
     const chat = ai.chats.create({
       model: "gemini-3-flash-preview",
       history: history,
-      config: { systemInstruction: "You are Medi, a helpful health assistant. Provide concise, clear medical information based on user queries." }
+      config: { systemInstruction: "You are Medi, a helpful health assistant. Provide concise, clear medical information based on user queries. If the user indicates a medical emergency, direct them to 911 immediately." }
     });
     const result = await chat.sendMessage({ message: newMessage });
     return result.text;

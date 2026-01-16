@@ -131,11 +131,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/splash" replace />} />
           <Route path="/splash" element={<Splash />} />
-          
-          <Route path="/profile-setup" element={
-            <ProfileSetup onSave={handleProfileSave} />
-          } />
+          <Route path="/profile-setup" element={<ProfileSetup onSave={handleProfileSave} />} />
+          <Route path="/chat" element={<Chat />} />
 
+          {/* Main App Layout */}
           <Route path="/*" element={
             <Layout>
               <Routes>
@@ -149,7 +148,9 @@ function App() {
                 <Route path="/check" element={<ToolWrapper />} />
                 <Route path="/doctors" element={<Doctors />} />
                 <Route path="/map" element={<MapPage />} />
-                <Route path="/emergency" element={<Emergency user={user || defaultUser} />} />
+                <Route path="/emergency" element={
+                   <Emergency user={user || defaultUser} />
+                } />
                 <Route path="/settings" element={
                   <SettingsPage 
                     user={user || defaultUser} 
@@ -169,8 +170,6 @@ function App() {
               </Routes>
             </Layout>
           } />
-          
-          <Route path="/chat" element={<Chat />} />
         </Routes>
       </HashRouter>
     </ErrorBoundary>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { MapPin, Navigation, Loader2, Search as SearchIcon, X, Pill, Building2, Stethoscope, Route } from 'lucide-react';
 import { mapSearchWithContext } from '../services/geminiService';
 import { Place } from '../types';
@@ -30,7 +30,7 @@ const APP_DOCTORS = [
 type MapMode = 'hospital' | 'pharmacy';
 
 export const MapPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const locationHook = useLocation();
   const [activeTab, setActiveTab] = useState<MapMode>('hospital');
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
@@ -43,6 +43,7 @@ export const MapPage: React.FC = () => {
 
   useEffect(() => {
     // Check for query param on mount/update
+    const searchParams = new URLSearchParams(locationHook.search);
     const query = searchParams.get('q');
     if (query) {
       setSearchQuery(query);
@@ -56,7 +57,7 @@ export const MapPage: React.FC = () => {
     } else {
       setLocation({ lat: 37.7749, lng: -122.4194 });
     }
-  }, [searchParams]);
+  }, [locationHook.search]);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
