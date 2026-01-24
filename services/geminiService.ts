@@ -26,6 +26,49 @@ export const checkEmergencyKeywords = (text: string): boolean => {
 };
 
 /**
+ * Gatekeeper function to validate doctor credentials text using AI.
+ * Blocks obvious fakes like "Google University" or "Natural Healer".
+ */
+export const validateDoctorCredentials = async (specialty: string, qualifications: string) => {
+  const ai = getAiClient();
+  const prompt = `
+    Analyze the following doctor profile input for a professional medical platform.
+    Specialty: "${specialty}"
+    Qualifications: "${qualifications}"
+
+    Task:
+    1. Determine if the qualification/specialty combination is medically plausible and professional.
+    2. Flag any input that looks fake, satirical, non-medical (e.g., "Life Coach", "Spirit Healer" without license), or suspicious (e.g., "MBBS from Google", "I cure cancer naturally").
+    
+    Return JSON:
+    - valid: boolean (true if plausible, false if suspicious/fake)
+    - reason: string (Short warning message to the user if invalid. Empty if valid.)
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            valid: { type: Type.BOOLEAN },
+            reason: { type: Type.STRING }
+          }
+        }
+      }
+    });
+    return JSON.parse(response.text || "{}");
+  } catch (e) {
+    console.error("Validation failed", e);
+    // Fail safe: allow if AI is down, but normally we might block or flag for manual review.
+    return { valid: true, reason: "" };
+  }
+};
+
+/**
  * Enhanced search for nearby places with reasoning for doctors/medicines.
  */
 export const mapSearchWithContext = async (

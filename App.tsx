@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, ErrorInfo, Component, ReactNode } from 'react';
+import React, { useState, useEffect, ErrorInfo, ReactNode } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './Layout';
 import { Splash, ProfileSetup } from './pages/Onboarding';
@@ -32,7 +32,7 @@ interface ErrorBoundaryState {
 }
 
 // --- Error Boundary to prevent White Screen of Death ---
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -118,6 +118,7 @@ function App() {
     allergies: "",
     conditions: "",
     deviceConnected: false,
+    role: 'patient',
     emergencyContact: {
       name: "Emergency Contact",
       phone: "",
@@ -177,3 +178,4 @@ function App() {
 }
 
 export default App;
+    

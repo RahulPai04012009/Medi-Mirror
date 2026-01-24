@@ -12,6 +12,13 @@ export interface UserProfile {
   conditions: string;
   deviceConnected: boolean;
   deviceName?: string;
+  role: 'patient' | 'doctor';
+  doctorProfile?: {
+    specialty: string;
+    qualifications: string;
+    licenseNumber: string;
+    verificationStatus: 'pending' | 'verified' | 'rejected';
+  };
   emergencyContact: {
     name: string;
     phone: string;
